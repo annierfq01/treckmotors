@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { supabaseAdmin } from '../supabase.js';
-import { initialDbState } from '../../../client/src/data/initialDb.js';
+import { initialDbState } from '../data/initialDb.js';
 
 function hashPassword(password: string): { salt: string; hash: string } {
   const salt = crypto.randomBytes(32).toString('hex');

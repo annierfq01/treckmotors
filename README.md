@@ -24,8 +24,10 @@ treckmotors/
 │   │   ├── middleware/
 │   │   │   └── auth.ts       # Middleware JWT + roles
 │   │   ├── routes/           # products, orders, auth, users, reviews, settings, storage, facebook
+│   │   ├── data/
+│   │   │   └── initialDb.ts  # Seed data (productos, usuarios, pedidos)
 │   │   └── services/
-│   │       └── seed.ts       # Datos iniciales
+│   │       └── seed.ts       # Población inicial de BD
 │   ├── .env                  # Credenciales reales (no se sube a git)
 │   ├── .env.example          # Plantilla con valores placeholder
 │   └── package.json
@@ -211,9 +213,10 @@ Conecta este repo a GitHub/GitLab.
 | Configuración | Valor |
 |---|---|
 | **Root Directory** | `/` |
-| **Build Command** | `cd client && npm ci && npm run build` |
-| **Output Directory** | `client/dist` |
 | **Node.js Version** | `20.x` (o superior) |
+| **Install Command** | Déjalo vacío (Vercel usa `npm install` por defecto) |
+
+> **Nota:** El **Build Command** y **Output Directory** de la UI se ignoran porque `vercel.json` contiene una sección `builds`. El proceso de build lo controla `vercel.json` + el script `vercel-build` en `server/package.json`.
 
 ### 5.3 Variables de entorno en Vercel
 
@@ -232,11 +235,12 @@ Las variables `VITE_*` **no** son necesarias en producción porque el frontend e
 
 ### 5.4 Desplegar
 
-Vercel detecta automáticamente `vercel.json` en la raíz y configura las rutas:
+Vercel usa `vercel.json` en la raíz para configurar:
 
-- `/api/*` → función serverless (`api/index.ts`)
-- `/product/:id`, `/producto/:id` → función serverless (SEO)
-- `/*` → `index.html` (SPA)
+- **Serverless API**: `server/api/index.ts` compilado por `@vercel/node`
+- **Frontend**: El script `vercel-build` en `server/package.json` construye el cliente (`client/dist/`)
+- `vercel-build`: `cd ../client && npm ci && npm run build`
+- El servidor Express sirve tanto la API como los archivos estáticos del frontend
 
 Haz click en **Deploy**. La app estará disponible en `https://treckmotors.vercel.app`.
 
