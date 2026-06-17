@@ -216,7 +216,7 @@ Conecta este repo a GitHub/GitLab.
 | **Node.js Version** | `20.x` (o superior) |
 | **Install Command** | Déjalo vacío (Vercel usa `npm install` por defecto) |
 
-> **Nota:** El **Build Command** y **Output Directory** de la UI se ignoran porque `vercel.json` contiene una sección `builds`. El proceso de build lo controla `vercel.json` + el script `vercel-build` en `server/package.json`.
+> **Nota:** El **Build Command** y **Output Directory** de la UI se ignoran porque `vercel.json` contiene una sección `builds`. El proceso de build lo controla `vercel.json` + el script `vercel-build` en el `package.json` raíz.
 
 ### 5.3 Variables de entorno en Vercel
 
@@ -238,8 +238,8 @@ Las variables `VITE_*` **no** son necesarias en producción porque el frontend e
 Vercel usa `vercel.json` en la raíz para configurar:
 
 - **Serverless API**: `server/api/index.ts` compilado por `@vercel/node`
-- **Frontend**: El script `vercel-build` en `server/package.json` construye el cliente (`client/dist/`)
-- `vercel-build`: `cd ../client && npm ci && npm run build`
+- **Frontend**: El script `vercel-build` en el `package.json` raíz construye el cliente (`client/dist/`)
+- `vercel-build`: `cd client && npm install && npm run build`
 - El servidor Express sirve tanto la API como los archivos estáticos del frontend
 
 Haz click en **Deploy**. La app estará disponible en `https://treckmotors.vercel.app`.
