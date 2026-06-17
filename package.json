@@ -1,0 +1,10 @@
+{
+  "name": "treckmotors",
+  "private": true,
+  "scripts": {
+    "dev": "cd server && npx tsx watch --env-file .env src/index.ts",
+    "dev:client": "cd client && npx vite",
+    "build": "cd client && npm ci && npm run build",
+    "start": "cd server && NODE_ENV=production npx tsx --env-file .env src/index.ts"
+  }
+}

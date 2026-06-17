@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "server/api/index.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/server/api/index.ts"
+    },
+    {
+      "source": "/product/:id",
+      "destination": "/server/api/index.ts"
+    },
+    {
+      "source": "/producto/:id",
+      "destination": "/server/api/index.ts"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/server/api/index.ts"
+    }
+  ],
+  "cleanUrls": true
+}
