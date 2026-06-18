@@ -1,0 +1,6 @@
+{
+  "name": "Treck Motors Cuba",
+  "description": "Plataforma premium de reservación online y recogida física en showroom para la venta de motocicletas de alta gama y repuestos originales de Treck Motors en Bayamo, Granma, Cuba.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
