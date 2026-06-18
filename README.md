@@ -216,7 +216,7 @@ Conecta este repo a GitHub/GitLab.
 | **Node.js Version** | `20.x` (o superior) |
 | **Install Command** | Déjalo vacío (Vercel usa `npm install` por defecto) |
 
-> **Nota:** El **Build Command** y **Output Directory** de la UI se ignoran porque `vercel.json` contiene una sección `builds`. El proceso de build lo controla `vercel.json` + `vercel-build` en el `package.json` raíz.
+> **Nota:** El **Build Command** y **Output Directory** de la UI se ignoran porque `vercel.json` contiene una sección `builds`. El proceso de build lo controlan los builders en `vercel.json`.
 
 ### 5.3 Variables de entorno en Vercel
 
@@ -239,17 +239,18 @@ Puedes importar el archivo `.env.production` desde la raíz del proyecto:
 
 ### 5.4 Desplegar
 
-Vercel usa `vercel.json` en la raíz para configurar:
+Vercel usa `vercel.json` en la raíz para configurar dos builders:
 
-1. **`vercel-build`** (root `package.json`): `cd client && npm install && npm run build` → compila el SPA a `client/dist/`
-2. **`@vercel/node`** (desde `vercel.json`): compila `server/api/index.ts` como serverless function
-3. **`includeFiles`**: los archivos de `client/dist/` se incluyen dentro de la función serverless para que Express los sirva
+| Builder | Fuente | Rol |
+|---|---|---|
+| `@vercel/static-build` | `client/package.json` | Compila el SPA con Vite (`distDir: "dist"`) |
+| `@vercel/node` | `server/api/index.ts` | API REST + SEO dinámico |
 
-Todas las rutas van al servidor Express:
+Las rutas se distribuyen así:
 
-- `/api/*` → API REST
-- `/product/:id`, `/producto/:id` → SEO con meta tags dinámicos
-- `/*` → `index.html` del SPA (servido por Express desde `client/dist/`)
+- `/api/*` → función serverless (Express)
+- `/product/:id`, `/producto/:id` → función serverless (SEO con meta tags)
+- `/*` → `index.html` del SPA (servido por Vercel CDN, no por Express)
 
 Haz click en **Deploy**. La app estará disponible en `https://treckmotors.vercel.app`.
 

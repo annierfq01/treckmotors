@@ -6,6 +6,6 @@
     "dev:client": "cd client && npx vite",
     "build": "cd client && npm ci && npm run build",
     "start": "cd server && NODE_ENV=production npx tsx --env-file .env src/index.ts",
-    "vercel-build": "cd client && npm install && npm run build"
+    "vercel-build": "echo 'Build handled by vercel.json builders'"
   }
 }
