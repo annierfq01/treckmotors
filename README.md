@@ -18,6 +18,9 @@ treckmotors/
 │   └── .env                  # VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
 ├── server/                    # Backend Express.js
 │   ├── api/index.ts          # Vercel serverless entry point
+│   ├── public/               # Frontend compilado (se sube a git)
+│   │   ├── index.html
+│   │   └── assets/
 │   ├── src/
 │   │   ├── index.ts          # App Express (rutas, CORS, static, SEO)
 │   │   ├── supabase.ts       # Clientes Supabase (anon + admin)
@@ -192,20 +195,33 @@ npm run start    # arranca server en producción
 
 ## 5. Despliegue en Vercel
 
-### 5.1 Preparar el repositorio
+### 5.1 Build del frontend (local)
 
-El repositorio debe tener esta estructura en la raíz (no dentro de `client/`). Si tu `.git` está dentro de `client/`, crea un nuevo repo en la raíz:
+El frontend se compila en tu máquina Windows y se sube ya compilado al repositorio.
+Esto evita problemas de plataforma (Windows → Linux) en el build de Vercel.
 
 ```bash
-# Inicializar git en la raíz del proyecto
-git init
-git add .
-git commit -m "Inicial proyecto Treck Motors"
+# 1. Compilar el frontend
+cd client && npm install && npm run build
+
+# 2. Copiar el build al servidor
+cp -r dist/* ../server/public/
+
+# 3. Volver a la raíz
+cd ..
 ```
 
-Conecta este repo a GitHub/GitLab.
+Los archivos compilados quedan en `server/public/` y se suben al repositorio con `git add .`.
 
-### 5.2 Crear proyecto en Vercel
+### 5.2 Subir cambios a GitHub
+
+```bash
+git add .
+git commit -m "build: actualizar client compilado"
+git push
+```
+
+### 5.3 Crear proyecto en Vercel
 
 1. Ve a [https://vercel.com](https://vercel.com) e importa tu repositorio
 2. Configura el proyecto con estos valores:
@@ -214,14 +230,13 @@ Conecta este repo a GitHub/GitLab.
 |---|---|
 | **Root Directory** | `/` |
 | **Node.js Version** | `20.x` (o superior) |
-| **Install Command** | Déjalo vacío (Vercel usa `npm install` por defecto) |
+| **Framework Preset** | `Other` |
 
-> **Nota:** El **Build Command** y **Output Directory** de la UI se ignoran porque `vercel.json` contiene una sección `builds`. El proceso de build lo controlan los builders en `vercel.json`.
+> Vercel solo compila el servidor Express (`server/api/index.ts`). El frontend ya viene compilado en `server/public/`.
 
-### 5.3 Variables de entorno en Vercel
+### 5.4 Variables de entorno en Vercel
 
 Añade en el dashboard de Vercel (Project Settings > Environment Variables).
-Puedes importar el archivo `.env.production` desde la raíz del proyecto:
 
 | Variable | Descripción |
 |---|---|
@@ -231,30 +246,33 @@ Puedes importar el archivo `.env.production` desde la raíz del proyecto:
 | `JWT_SECRET` | Clave para firmar JWTs |
 | `NODE_ENV` | `production` |
 | `APP_URL` | `https://treckmotors.vercel.app` |
-| `FACEBOOK_APP_ID` | App ID de Facebook Developer |
-| `FACEBOOK_APP_SECRET` | App Secret de Facebook Developer |
-| `FACEBOOK_REDIRECT_URI` | `https://treckmotors.vercel.app/admin` |
-| `VITE_SUPABASE_URL` | Misma URL que `SUPABASE_URL` (para el build del frontend) |
-| `VITE_SUPABASE_ANON_KEY` | Misma key que `SUPABASE_ANON_KEY` (para el build del frontend) |
 
-### 5.4 Desplegar
+No necesitas variables `VITE_*` porque el frontend ya viene compilado.
 
-Vercel usa `vercel.json` en la raíz para configurar dos builders:
+### 5.5 Desplegar
 
-| Builder | Fuente | Rol |
-|---|---|---|
-| `@vercel/static-build` | `client/package.json` | Compila el SPA con Vite (`distDir: "dist"`) |
-| `@vercel/node` | `server/api/index.ts` | API REST + SEO dinámico |
+El build de Vercel solo compila el servidor Express. El `@vercel/node` builder compila `server/api/index.ts` e incluye los archivos de `server/public/` (el frontend compilado).
 
-Las rutas se distribuyen así:
+Las rutas se manejan desde el servidor Express:
 
-- `/api/*` → función serverless (Express)
-- `/product/:id`, `/producto/:id` → función serverless (SEO con meta tags)
-- `/*` → `index.html` del SPA (servido por Vercel CDN, no por Express)
+- `/api/*` → API REST
+- `/product/:id`, `/producto/:id` → SEO con meta tags dinámicos
+- `/*` → frontend SPA (servido como archivo estático)
 
 Haz click en **Deploy**. La app estará disponible en `https://treckmotors.vercel.app`.
 
-### 5.5 Configurar Google OAuth en producción
+### 5.6 Actualizar el frontend después de cambios
+
+Cada vez que modifiques el código del frontend (`client/`), debes recompilarlo y subir los cambios:
+
+```bash
+cd client && npm run build && cp -r dist/* ../server/public/ && cd ..
+git add .
+git commit -m "build: actualizar client compilado"
+git push
+```
+
+### 5.7 Configurar Google OAuth en producción
 
 En Supabase Dashboard > **Authentication > Providers > Google**, añade:
 
