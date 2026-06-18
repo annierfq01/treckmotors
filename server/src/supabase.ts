@@ -9,7 +9,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('[Supabase] Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables');
 }
 
-const realtimeOpts = { transport: WebSocket };
+const realtimeOpts = { transport: WebSocket as any };
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   realtime: realtimeOpts,

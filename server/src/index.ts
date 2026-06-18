@@ -121,33 +121,27 @@ if (fs.existsSync(staticDir)) {
   });
 }
 
-async function tryLoadVite() {
-  try {
-    const { createServer: createViteServer } = await import('vite');
-    return createViteServer;
-  } catch {
-    return null;
-  }
-}
-
 export async function startServer() {
   const PORT = parseInt(process.env.PORT || '3000', 10);
 
   await runAllSeeds();
 
-  const createViteServer = await tryLoadVite();
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      const { createServer: createViteServer } = await import('vite');
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: 'spa',
+      });
+      app.use(vite.middlewares);
 
-  if (createViteServer && process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-
-    app.get('*', async (_req, res) => {
-      const template = fs.readFileSync(path.join(process.cwd(), 'index.html'), 'utf-8');
-      res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
-    });
+      app.get('*', async (_req, res) => {
+        const template = fs.readFileSync(path.join(process.cwd(), 'index.html'), 'utf-8');
+        res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+      });
+    } catch {
+      // Vite no disponible en producción
+    }
   }
 
   app.listen(PORT, '0.0.0.0', () => {

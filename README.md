@@ -221,15 +221,7 @@ Conecta este repo a GitHub/GitLab.
 ### 5.3 Variables de entorno en Vercel
 
 Añade en el dashboard de Vercel (Project Settings > Environment Variables):
-
-| Variable | Valor |
-|---|---|
-| `SUPABASE_URL` | URL de tu proyecto Supabase |
-| `SUPABASE_ANON_KEY` | Anon key de Supabase |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role key de Supabase |
-| `JWT_SECRET` | Clave secreta para firmar JWTs (cambiar respecto a dev) |
-| `NODE_ENV` | `production` |
-| `APP_URL` | `https://treckmotors.vercel.app` |
+Agregar mediante el .env
 
 Las variables `VITE_*` **no** son necesarias en producción porque el frontend es estático y las URLs de API se resuelven contra el mismo origen.
 
