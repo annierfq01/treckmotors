@@ -27,9 +27,12 @@ function getStaticDir(): string {
     path.join(process.cwd(), 'dist'),
     path.join(process.cwd(), 'server', 'dist'),
     path.join(process.cwd(), 'client', 'dist'),
+    path.join(process.cwd(), 'server', 'public'),
     path.join(__dirname, '..', 'dist'),
     path.join(__dirname, '..', '..', 'dist'),
     path.join(__dirname, '..', '..', 'client', 'dist'),
+    path.join(__dirname, '..', 'public'),
+    path.join(__dirname, '..', '..', 'public'),
   ];
 
   for (const dir of candidates) {
@@ -114,7 +117,7 @@ app.get(['/product/:id', '/producto/:id'], async (req, res, next) => {
   next();
 });
 
-if (fs.existsSync(staticDir)) {
+if (!process.env.VERCEL && fs.existsSync(staticDir)) {
   app.use(express.static(staticDir));
   app.get('*', (_req, res) => {
     res.sendFile(path.join(staticDir, 'index.html'));

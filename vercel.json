@@ -2,34 +2,38 @@
   "version": 2,
   "builds": [
     {
-      "src": "server/api/index.ts",
-      "use": "@vercel/node"
-    },
-    {
       "src": "client/package.json",
       "use": "@vercel/static-build",
       "config": {
         "distDir": "dist"
       }
+    },
+    {
+      "src": "server/api/index.ts",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "server/public/index.html"
+        ]
+      }
     }
   ],
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "/server/api/index.ts"
+      "src": "/api/(.*)",
+      "dest": "/server/api/index.ts"
     },
     {
-      "source": "/product/:id",
-      "destination": "/server/api/index.ts"
+      "src": "/product/(.*)",
+      "dest": "/server/api/index.ts"
     },
     {
-      "source": "/producto/:id",
-      "destination": "/server/api/index.ts"
+      "src": "/producto/(.*)",
+      "dest": "/server/api/index.ts"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
-  ],
-  "cleanUrls": true
+  ]
 }
