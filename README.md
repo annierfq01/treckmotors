@@ -216,29 +216,40 @@ Conecta este repo a GitHub/GitLab.
 | **Node.js Version** | `20.x` (o superior) |
 | **Install Command** | Déjalo vacío (Vercel usa `npm install` por defecto) |
 
-> **Nota:** El **Build Command** y **Output Directory** de la UI se ignoran porque `vercel.json` contiene una sección `builds`. El proceso de build lo controla `vercel.json` (builders `@vercel/node` + `@vercel/static-build`).
+> **Nota:** El **Build Command** y **Output Directory** de la UI se ignoran porque `vercel.json` contiene una sección `builds`. El proceso de build lo controla `vercel.json` + `vercel-build` en el `package.json` raíz.
 
 ### 5.3 Variables de entorno en Vercel
 
-Añade en el dashboard de Vercel (Project Settings > Environment Variables):
-Agregar mediante el .env
+Añade en el dashboard de Vercel (Project Settings > Environment Variables).
+Puedes importar el archivo `.env.production` desde la raíz del proyecto:
 
-Las variables `VITE_*` **no** son necesarias en producción porque el frontend es estático y las URLs de API se resuelven contra el mismo origen.
+| Variable | Descripción |
+|---|---|
+| `SUPABASE_URL` | URL del proyecto Supabase |
+| `SUPABASE_ANON_KEY` | Anon key de Supabase |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key de Supabase |
+| `JWT_SECRET` | Clave para firmar JWTs |
+| `NODE_ENV` | `production` |
+| `APP_URL` | `https://treckmotors.vercel.app` |
+| `FACEBOOK_APP_ID` | App ID de Facebook Developer |
+| `FACEBOOK_APP_SECRET` | App Secret de Facebook Developer |
+| `FACEBOOK_REDIRECT_URI` | `https://treckmotors.vercel.app/admin` |
+| `VITE_SUPABASE_URL` | Misma URL que `SUPABASE_URL` (para el build del frontend) |
+| `VITE_SUPABASE_ANON_KEY` | Misma key que `SUPABASE_ANON_KEY` (para el build del frontend) |
 
 ### 5.4 Desplegar
 
 Vercel usa `vercel.json` en la raíz para configurar:
 
-| Builder | Fuente | Rol |
-|---|---|---|
-| `@vercel/node` | `server/api/index.ts` | API REST + SEO (`/product/:id`, `/producto/:id`) |
-| `@vercel/static-build` | `client/package.json` | SPA estático (Vite build, `distDir: "dist"`) |
+1. **`vercel-build`** (root `package.json`): `cd client && npm install && npm run build` → compila el SPA a `client/dist/`
+2. **`@vercel/node`** (desde `vercel.json`): compila `server/api/index.ts` como serverless function
+3. **`includeFiles`**: los archivos de `client/dist/` se incluyen dentro de la función serverless para que Express los sirva
 
-Las rutas se distribuyen así:
+Todas las rutas van al servidor Express:
 
-- `/api/*` → función serverless (Express)
-- `/product/:id`, `/producto/:id` → función serverless (SEO con meta tags)
-- `/*` → `index.html` del SPA (servido por Vercel CDN, no por Express)
+- `/api/*` → API REST
+- `/product/:id`, `/producto/:id` → SEO con meta tags dinámicos
+- `/*` → `index.html` del SPA (servido por Express desde `client/dist/`)
 
 Haz click en **Deploy**. La app estará disponible en `https://treckmotors.vercel.app`.
 

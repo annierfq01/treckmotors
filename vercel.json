@@ -3,13 +3,11 @@
   "builds": [
     {
       "src": "server/api/index.ts",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "client/package.json",
-      "use": "@vercel/static-build",
+      "use": "@vercel/node",
       "config": {
-        "distDir": "dist"
+        "includeFiles": [
+          "client/dist/**"
+        ]
       }
     }
   ],
@@ -28,7 +26,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/index.html"
+      "destination": "/server/api/index.ts"
     }
   ],
   "cleanUrls": true

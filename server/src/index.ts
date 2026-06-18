@@ -128,6 +128,7 @@ export async function startServer() {
 
   if (process.env.NODE_ENV !== 'production') {
     try {
+      // @ts-expect-error - vite no está en server deps, solo se usa en dev
       const { createServer: createViteServer } = await import('vite');
       const vite = await createViteServer({
         server: { middlewareMode: true },
