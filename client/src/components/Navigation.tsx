@@ -9,7 +9,6 @@ interface NavigationProps {
   currentUser: { email: string; name: string; role: 'admin' | 'cliente'; isGoogleAuth?: boolean; photoURL?: string; isGuest?: boolean } | null;
   onLogout: () => void;
   onLoginWithGoogle: () => void;
-  onSwitchUser: (email: string, name: string, role: 'admin' | 'cliente') => void;
   onOpenAuth: () => void;
   contactPhone?: string;
 }
@@ -20,7 +19,6 @@ export default function Navigation({
   currentUser,
   onLogout,
   onLoginWithGoogle,
-  onSwitchUser,
   onOpenAuth,
   contactPhone = "+53 5212 3456"
 }: NavigationProps) {
@@ -37,11 +35,6 @@ export default function Navigation({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const selectUserDemo = (email: string, name: string, role: 'admin' | 'cliente') => {
-    onSwitchUser(email, name, role);
-    setDropdownOpen(false);
-  };
 
   const handleNavigateClick = (view: 'home' | 'catalog' | 'admin' | 'my-orders') => {
     onNavigate(view);

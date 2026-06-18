@@ -68,7 +68,7 @@ router.post('/register', async (req, res) => {
 
     const { salt, hash } = hashPassword(password);
     const userId = 'user-' + Date.now().toString() + '-' + crypto.randomBytes(4).toString('hex');
-    const userRole = email.toLowerCase() === 'annierfq01@gmail.com' ? 'admin' : (role === 'admin' ? 'admin' : 'cliente');
+    const userRole = email.toLowerCase() === 'annierfq01@gmail.com' ? 'admin' : 'cliente';
 
     const { data: dbUser, error: dbError } = await supabaseAdmin.from('users').upsert({
       id: userId,

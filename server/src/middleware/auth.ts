@@ -67,7 +67,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
           id: dbUser.id,
           email: dbUser.email,
           name: dbUser.name,
-          role: dbUser.role,
+          role: 'cliente',
           active: dbUser.active,
         };
         return next();

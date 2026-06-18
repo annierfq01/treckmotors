@@ -42,9 +42,10 @@ export default function App() {
       }
     }
     return {
-      email: 'annierfq01@gmail.com',
-      name: 'Annier FQ',
-      role: 'admin'
+      email: 'invitado@treckmotors.com',
+      name: 'Invitado',
+      role: 'cliente',
+      isGuest: true
     };
   });
 
@@ -234,12 +235,6 @@ export default function App() {
     loadSettings();
   }, [currentUser.email]);
 
-  // Handler to swap user roles dynamically
-  const handleSwitchUser = (email: string, name: string, role: 'admin' | 'cliente') => {
-    setCurrentUser({ email, name, role });
-    playSuccessBeep();
-  };
-
   // Helper selectors
   const getProductRatingInfo = (productId: string) => {
     const prodReviews = reviews.filter(r => r.productId === productId);
@@ -277,7 +272,6 @@ export default function App() {
         currentUser={currentUser}
           onLogout={handleLogout}
         onLoginWithGoogle={handleLoginWithGoogle}
-        onSwitchUser={handleSwitchUser}
         onOpenAuth={() => setIsAuthOpen(true)}
         contactPhone={settings?.contactPhone}
       />
