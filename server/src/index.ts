@@ -117,7 +117,7 @@ app.get(['/product/:id', '/producto/:id'], async (req, res, next) => {
   next();
 });
 
-if (!process.env.VERCEL && fs.existsSync(staticDir)) {
+if (fs.existsSync(staticDir)) {
   app.use(express.static(staticDir));
   app.get('*', (_req, res) => {
     res.sendFile(path.join(staticDir, 'index.html'));
