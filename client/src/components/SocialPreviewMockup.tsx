@@ -35,7 +35,7 @@ export default function SocialPreviewMockup({ product, onClose }: SocialPreviewM
   };
 
   return (
-    <div className="fixed inset-0 bg-neutral-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
+    <div className="fixed inset-0 bg-neutral-950/80 backdrop-blur-md flex items-start justify-center pt-8 pb-8 px-4 z-50 overflow-y-auto">
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -145,7 +145,7 @@ export default function SocialPreviewMockup({ product, onClose }: SocialPreviewM
                   className="bg-[#0b141a] rounded-xl max-w-sm w-full border border-neutral-800 overflow-hidden shadow-xl"
                 >
                   <div className="bg-[#1f2c34] px-4 py-2 flex items-center gap-2 text-white/50 text-[10px]">
-                    <span className="w-5 h-5 rounded-full bg-red-655 bg-red-600 flex items-center justify-center text-white font-bold text-[8px]">TM</span>
+                    <span className="w-5 h-5 rounded-full bg-red-600 flex items-center justify-center text-white font-bold text-[8px]">TM</span>
                     <div>
                       <div className="text-white font-medium text-xs">Soporte Treck Motors</div>
                       <div>en línea</div>
@@ -175,7 +175,7 @@ export default function SocialPreviewMockup({ product, onClose }: SocialPreviewM
                           className="w-full h-full object-cover"
                           referrerPolicy="no-referrer"
                         />
-                        <div className="absolute top-2 right-2 bg-red-655 bg-red-600 text-white font-mono font-bold text-[9px] px-2 py-0.5 rounded shadow">
+                        <div className="absolute top-2 right-2 bg-red-600 text-white font-mono font-bold text-[9px] px-2 py-0.5 rounded shadow">
                           ${product.price.toLocaleString()} MLC
                         </div>
                       </div>
@@ -201,7 +201,7 @@ export default function SocialPreviewMockup({ product, onClose }: SocialPreviewM
                   className="bg-black text-white rounded-xl border border-neutral-800 max-w-sm w-full p-4 shadow-xl font-sans"
                 >
                   <div className="flex gap-2 mb-3">
-                    <div className="w-8 h-8 rounded-full bg-red-655 bg-red-600 flex items-center justify-center font-bold text-xs text-white">TM</div>
+                    <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center font-bold text-xs text-white">TM</div>
                     <div>
                       <div className="font-bold text-xs flex items-center gap-1">
                         <span>Treck Motors Cuba</span>
