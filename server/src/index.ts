@@ -21,25 +21,25 @@ import { supabaseAdmin } from './supabase.js';
 import { runAllSeeds } from './services/seed.js';
 
 function getStaticDir(): string {
-  if (process.env.STATIC_DIR) return process.env.STATIC_DIR;
+  if (process.env.STATIC_DIR) {
+    const dir = path.resolve(process.cwd(), process.env.STATIC_DIR);
+    if (fs.existsSync(path.join(dir, 'index.html'))) return dir;
+  }
 
   const candidates = [
-    path.join(process.cwd(), 'dist'),
-    path.join(process.cwd(), 'server', 'dist'),
-    path.join(process.cwd(), 'client', 'dist'),
     path.join(process.cwd(), 'server', 'public'),
-    path.join(__dirname, '..', 'dist'),
-    path.join(__dirname, '..', '..', 'dist'),
-    path.join(__dirname, '..', '..', 'client', 'dist'),
+    path.join(process.cwd(), 'client', 'dist'),
+    path.join(process.cwd(), 'server', 'dist'),
     path.join(__dirname, '..', 'public'),
     path.join(__dirname, '..', '..', 'public'),
+    path.join(process.cwd(), 'dist'),
   ];
 
   for (const dir of candidates) {
     if (fs.existsSync(path.join(dir, 'index.html'))) return dir;
   }
 
-  return path.join(process.cwd(), 'dist');
+  return '';
 }
 
 export const app = express();
