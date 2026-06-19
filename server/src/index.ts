@@ -32,6 +32,8 @@ function getStaticDir(): string {
     path.join(process.cwd(), 'server', 'dist'),
     path.join(__dirname, '..', 'public'),
     path.join(__dirname, '..', '..', 'public'),
+    path.join(__dirname, '..', '..', 'server', 'public'),
+    path.join(__dirname, '..', '..', '..', 'server', 'public'),
     path.join(process.cwd(), 'dist'),
   ];
 
@@ -39,6 +41,7 @@ function getStaticDir(): string {
     if (fs.existsSync(path.join(dir, 'index.html'))) return dir;
   }
 
+  console.log('[Static] Not found in any candidate. SPA will not be served.');
   return '';
 }
 
