@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { HelmetProvider } from 'react-helmet-async';
 import { Product, Order, User, ProductReview, SystemSettings } from './types';
 import Navigation from './components/Navigation';
 import AdminPanel from './components/AdminPanel';
 import ReservationModal from './components/ReservationModal';
 import AuthModal from './components/AuthModal';
 import SocialPreviewMockup from './components/SocialPreviewMockup';
+import ProductPage from './components/ProductPage';
 import { 
   Flame, Search, ArrowRight, ShieldAlert,
   ShoppingBag, Calendar, Phone, MapPin, Sparkles, Check, Info, Share2, HelpCircle, Star, Ticket, ShieldCheck, Mail, Clock,
@@ -140,11 +142,51 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [socialShareProduct, setSocialShareProduct] = useState<Product | null>(null);
   const [bookingProduct, setBookingProduct] = useState<Product | null>(null);
+  const [productPageProduct, setProductPageProduct] = useState<Product | null>(null);
 
-  // Review Form state
-  const [newReviewRating, setNewReviewRating] = useState(5);
-  const [newReviewComment, setNewReviewComment] = useState('');
-  const [isReviewSubmitting, setIsReviewSubmitting] = useState(false);
+  // URL-based product page routing
+  const navigateToProduct = (product: Product) => {
+    setProductPageProduct(product);
+    setSelectedProduct(null);
+    window.history.pushState({ productId: product.id }, '', `/producto/${product.id}`);
+  };
+
+  const handleBackFromProduct = () => {
+    setProductPageProduct(null);
+    window.history.pushState({}, '', '/');
+  };
+
+  // Check initial URL for product route
+  useEffect(() => {
+    const match = window.location.pathname.match(/^\/(?:product|producto)\/(.+)/);
+    if (match && products.length > 0) {
+      const id = decodeURIComponent(match[1]);
+      const found = products.find(p => p.id === id);
+      if (found) {
+        setProductPageProduct(found);
+      }
+    }
+  }, [products]);
+
+  // Listen for browser back/forward
+  useEffect(() => {
+    const handlePopState = () => {
+      const match = window.location.pathname.match(/^\/(?:product|producto)\/(.+)/);
+      if (match) {
+        const id = decodeURIComponent(match[1]);
+        const found = products.find(p => p.id === id);
+        if (found) {
+          setProductPageProduct(found);
+        } else {
+          setProductPageProduct(null);
+        }
+      } else {
+        setProductPageProduct(null);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [products]);
 
   const loadCatalog = async () => {
     try {
@@ -205,28 +247,6 @@ export default function App() {
     }
   };
 
-  const handleSubmitReview = async (productId: string) => {
-    if (!newReviewComment.trim()) return;
-    setIsReviewSubmitting(true);
-    try {
-      await reviewsService.createReview({
-        productId,
-        userEmail: currentUser.email,
-        userName: currentUser.name,
-        rating: newReviewRating,
-        comment: newReviewComment.trim()
-      });
-      loadReviews();
-      setNewReviewComment('');
-      setNewReviewRating(5);
-      playSuccessBeep();
-    } catch (err) {
-      console.error("Failed to submit review", err);
-    } finally {
-      setIsReviewSubmitting(false);
-    }
-  };
-
   // Lifecycle Syncs
   useEffect(() => {
     loadCatalog();
@@ -259,8 +279,23 @@ export default function App() {
   });
 
   return (
+    <HelmetProvider>
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans selection:bg-red-650 selection:bg-red-600">
       
+      {productPageProduct ? (
+        <ProductPage
+          product={productPageProduct}
+          reviews={reviews}
+          settings={settings}
+          currentUser={currentUser}
+          onBack={handleBackFromProduct}
+          onShare={(p) => setSocialShareProduct(p)}
+          onBook={(p) => setBookingProduct(p)}
+          onPublishFacebook={handlePublishToFacebook}
+          allProducts={products}
+        />
+      ) : (
+      <>
       {/* Sticky Premium Header navigation */}
       <Navigation
         currentView={currentView}
@@ -754,7 +789,7 @@ export default function App() {
                           <img 
                             src={p.image} 
                             alt={p.name} 
-                            onClick={() => setSelectedProduct(p)}
+                            onClick={() => navigateToProduct(p)}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
                             referrerPolicy="no-referrer"
                           />
@@ -802,7 +837,7 @@ export default function App() {
                             </div>
 
                             <h3 
-                              onClick={() => setSelectedProduct(p)}
+                              onClick={() => navigateToProduct(p)}
                               className="font-sans font-black text-sm text-zinc-200 group-hover:text-red-500 cursor-pointer transition-colors line-clamp-1 pt-1"
                             >
                               {p.name}
@@ -822,7 +857,7 @@ export default function App() {
                             <button
                               onClick={() => {
                                 if (settings && settings.reservationsEnabled === false) {
-                                  setSelectedProduct(p);
+                                  navigateToProduct(p);
                                 } else {
                                   setBookingProduct(p);
                                 }
@@ -903,7 +938,7 @@ export default function App() {
                   </div>
                 </div>
                 <button
-                  onClick={handleLogoutGoogle}
+                  onClick={handleLogout}
                   className="px-3 py-1.5 border border-zinc-805 border-zinc-800 text-zinc-400 hover:text-white hover:border-red-500/30 text-[10px] font-bold rounded-lg transition-all cursor-pointer self-start sm:self-auto"
                 >
                   Cerrar Sesión
@@ -1047,238 +1082,6 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      {/* DYNAMIC PRODUCT DETAIL SPEC MODAL COMPONENT */}
-      <AnimatePresence>
-        {selectedProduct && (
-          <div className="fixed inset-0 bg-zinc-950/80 backdrop-blur-md flex items-center justify-center p-4 z-40 overflow-y-auto">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              className="w-full max-w-4xl bg-zinc-900 border border-zinc-800 rounded-3xl overflow-y-auto max-h-[92vh] shadow-2xl custom-scrollbar flex flex-col font-sans"
-            >
-              {/* Layout detail header */}
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 p-6 sm:p-8 shrink-0 relative text-left">
-                {/* Close modal */}
-                <button
-                  onClick={() => setSelectedProduct(null)}
-                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/60 text-zinc-400 hover:text-white border border-zinc-800 flex items-center justify-center font-bold text-lg hover:scale-105 active:scale-95 transition-all cursor-pointer z-10"
-                >
-                  &times;
-                </button>
-
-                {/* Left Product media */}
-                <div className="md:col-span-5 relative aspect-square bg-zinc-955 rounded-2xl overflow-hidden border border-zinc-800">
-                  <img 
-                    src={selectedProduct.image} 
-                    alt={selectedProduct.name} 
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                  <span className="absolute bottom-3 left-3 bg-red-600 text-white font-mono font-bold text-[9px] px-2.5 py-1 rounded-md uppercase border border-red-700/30">
-                    Soporte Cuba
-                  </span>
-                </div>
-
-                {/* Right detailed specifications */}
-                <div className="md:col-span-7 flex flex-col justify-between space-y-4">
-                  <div className="space-y-1.5">
-                    <span className="text-[9px] font-black text-red-500 uppercase tracking-widest bg-red-500/10 px-2.5 py-0.5 rounded-full border border-red-500/10">
-                      Motor de Rendimiento Original {selectedProduct.category}
-                    </span>
-                    <h2 className="font-display font-black text-xl sm:text-2xl text-white uppercase tracking-tight leading-snug">
-                      {selectedProduct.name}
-                    </h2>
-                    
-                    {/* Status stock info */}
-                    <div className="flex items-center gap-3">
-                      <span className={`text-[10px] font-mono font-bold uppercase ${selectedProduct.stock > 0 ? 'text-emerald-500 bg-emerald-500/10 border-emerald-500/10' : 'text-red-500 bg-red-500/10 border-red-500/10'} px-2 py-0.5 rounded border`}>
-                        {selectedProduct.stock > 0 ? 'En Almacén Cuba' : 'Agotado'}
-                      </span>
-                      <span className="text-[10.5px] font-medium text-zinc-400">
-                        ({selectedProduct.stock} unidades disponibles para reserva)
-                      </span>
-                    </div>
-
-                    <p className="font-sans text-[11.5px] text-zinc-400 leading-relaxed pt-1.5">
-                      {selectedProduct.description}
-                    </p>
-
-                    {/* Features list */}
-                    {selectedProduct.features && selectedProduct.features.length > 0 && (
-                      <div className="space-y-1.5 pt-1">
-                        <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wide block">Especificaciones Técnicas:</span>
-                        <div className="grid grid-cols-2 gap-1.5 font-sans text-[10.5px] text-zinc-350 text-zinc-300">
-                          {selectedProduct.features.map((f, i) => (
-                            <div key={i} className="flex items-center gap-1.5 truncate">
-                              <Check size={11} className="text-red-500 shrink-0" />
-                              <span className="truncate">{f}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Actions reservation footer inside dialog */}
-                  <div className="pt-3 border-t border-zinc-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div className="flex flex-col">
-                      <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Monto Reserva Física</span>
-                      <span className="font-sans font-black text-red-500 text-lg font-mono">
-                        ${selectedProduct.price.toLocaleString()} MLC / USD
-                      </span>
-                    </div>
-
-                    <div className="flex gap-2 w-full sm:w-auto">
-                      <button
-                        onClick={() => {
-                          setSocialShareProduct(selectedProduct);
-                        }}
-                        className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-sans text-xs font-black transition-all cursor-pointer border border-zinc-700 flex items-center justify-center gap-1.5 shadow-lg shadow-black/10 w-full sm:w-auto"
-                      >
-                        <Share2 size={13} className="text-red-500" />
-                        <span>Compartir</span>
-                      </button>
-
-                      {currentUser.role === 'admin' && settings?.facebookPageId && (
-                        <button
-                          onClick={() => handlePublishToFacebook(selectedProduct.id)}
-                          className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-sans text-xs font-black transition-all cursor-pointer border border-blue-700 flex items-center justify-center gap-1.5 shadow-lg shadow-blue-600/15 w-full sm:w-auto"
-                        >
-                          <Facebook size={13} />
-                          <span>Publicar en FB</span>
-                        </button>
-                      )}
-
-                      {settings && settings.reservationsEnabled === false ? (
-                        <div className="bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-xl text-[11px] text-zinc-300 w-full sm:max-w-xs">
-                          <span className="font-black text-red-500 block">⚠️ RESERVAS ONLINE PAUSADAS</span>
-                          Para reservar este artículo, contáctenos en <span className="font-mono text-white text-xs">{settings.contactPhone}</span>.
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            setBookingProduct(selectedProduct);
-                            setSelectedProduct(null);
-                          }}
-                          disabled={selectedProduct.stock <= 0}
-                          className="px-6 py-2.5 rounded-xl bg-red-655 bg-red-600 hover:bg-red-700 disabled:bg-zinc-800 text-white font-sans text-xs font-black transition-all cursor-pointer shadow-lg shadow-red-600/15 w-full sm:w-auto"
-                        >
-                          {selectedProduct.stock <= 0 ? 'Sin existencias' : 'Reservar para Recogida'}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* REVIEWS SEGMENT */}
-              <div className="p-6 sm:p-8 bg-zinc-950/85 space-y-6 text-left shrink-0">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-zinc-900">
-                  <div className="space-y-1">
-                    <h4 className="font-sans font-black text-sm text-white uppercase tracking-wider">Valoraciones de la Comunidad</h4>
-                    <p className="text-[10px] text-zinc-400 font-sans">Opiniones técnicas y experiencias de uso aportadas por mecánicos y aficionados.</p>
-                  </div>
-                  <div className="flex items-center gap-2 bg-zinc-900 p-2.5 rounded-xl border border-zinc-800 shrink-0">
-                    <Star className="text-amber-500 fill-amber-500" size={14} />
-                    <span className="font-mono text-xs font-black text-amber-500">
-                      {getProductRatingInfo(selectedProduct.id).avg !== null ? getProductRatingInfo(selectedProduct.id).avg : '5.0'}
-                    </span>
-                    <span className="text-[9px] text-zinc-500 font-sans">({getProductRatingInfo(selectedProduct.id).count} reseñas)</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                  {/* Reviews lists columns */}
-                  <div className="lg:col-span-7 space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                    {reviews.filter(r => r.productId === selectedProduct.id).length === 0 ? (
-                      <div className="text-center py-12 space-y-3 border border-dashed border-zinc-800 rounded-2xl bg-zinc-900/10">
-                        <Star size={20} className="text-zinc-700 mx-auto" />
-                        <p className="text-[10px] text-zinc-500 font-sans">Este producto aún no cuenta con reseñas escritas. ¡Añade tu opinión abajo!</p>
-                      </div>
-                    ) : (
-                      reviews.filter(r => r.productId === selectedProduct.id).map(rev => (
-                        <div key={rev.id} className="p-3.5 bg-zinc-900/50 rounded-xl border border-zinc-800/40 space-y-2">
-                          <div className="flex justify-between items-start gap-2">
-                            <div>
-                              <div className="text-[11px] font-bold text-zinc-200 truncate">{rev.userName}</div>
-                              <div className="text-[9px] text-zinc-500 font-mono">{new Date(rev.createdAt).toLocaleDateString()}</div>
-                            </div>
-                            <div className="flex gap-0.5 shrink-0">
-                              {[1, 2, 3, 4, 5].map(st => (
-                                <Star 
-                                  key={st} 
-                                  size={9} 
-                                  className={st <= rev.rating ? "text-amber-500 fill-amber-500 font-black" : "text-zinc-700"} 
-                                />
-                              ))}
-                            </div>
-                          </div>
-                          <p className="font-sans text-[11px] text-zinc-350 leading-relaxed text-zinc-305">{rev.comment}</p>
-                        </div>
-                      ))
-                    )}
-                  </div>
-
-                  {/* Add review form column */}
-                  <div className="lg:col-span-5 bg-zinc-900 p-4 rounded-2xl border border-zinc-800 space-y-4">
-                    <div className="space-y-1">
-                      <h5 className="text-[11px] font-bold text-zinc-200 uppercase tracking-wide">Añadir tu Opinión Técnica</h5>
-                      <p className="text-[10px] text-zinc-500">Compón una valoración pública sincera para orientar a otros compradores.</p>
-                    </div>
-
-                    <div className="space-y-3.5">
-                      {/* Rating selection stars */}
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-zinc-400">Puntaje estrellas:</span>
-                        <div className="flex gap-1 select-none">
-                          {[1, 2, 3, 4, 5].map(sc => (
-                            <button
-                              key={sc}
-                              onClick={() => setNewReviewRating(sc)}
-                              className="text-zinc-600 hover:scale-110 active:scale-90 transition-all cursor-pointer font-black shrink-0"
-                            >
-                              <Star size={16} className={sc <= newReviewRating ? "text-amber-500 fill-amber-500" : "text-zinc-700 hover:text-amber-500/60"} />
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Comment */}
-                      <textarea
-                        required
-                        value={newReviewComment}
-                        onChange={(e) => setNewReviewComment(e.target.value)}
-                        placeholder="Ej. Excelente compresión de cilindro en Ducati, encajó perfectamente en Bayamo..."
-                        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 font-sans text-xs text-zinc-300 focus:outline-none focus:border-red-500 h-20 resize-none"
-                      />
-
-                      <button
-                        onClick={() => handleSubmitReview(selectedProduct.id)}
-                        disabled={isReviewSubmitting || !newReviewComment.trim()}
-                        className="w-full py-2 bg-red-600 hover:bg-red-700 disabled:bg-zinc-800 text-white font-sans text-xs font-bold rounded-xl cursor-pointer shadow-md select-none transition-all flex items-center justify-center gap-2"
-                      >
-                        {isReviewSubmitting ? (
-                          <>
-                            <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            <span>Enviando...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles size={11} />
-                            <span>Enviar Reseña Autorizada</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
       {/* RENDER ACTIVE RESERVATION MODAL OVERLAY */}
       <AnimatePresence>
         {bookingProduct && (
@@ -1332,6 +1135,8 @@ export default function App() {
         <p>© 2026 Treck Motors Cuba - Subcursal Oficial. Todos los derechos reservados.</p>
         <p className="text-[9px]">Garantía oficial certificada para distribución física en todo el territorio nacional.</p>
       </footer>
+      </>)}
     </div>
+    </HelmetProvider>
   );
 }
