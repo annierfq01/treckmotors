@@ -490,7 +490,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                   <Layers size={16} className="text-red-500" />
                 </div>
                 <div className="text-xl md:text-2xl font-black text-white font-mono">{products.length}</div>
-                <div className="text-[10px] text-neutral-500">Motos y piezas activas</div>
+                <div className="text-[10px] text-neutral-500">Motos, piezas y otros</div>
               </div>
             </div>
 
@@ -521,6 +521,15 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                   </div>
 
                   {/* Category 3 */}
+                  <div className="flex flex-col items-center flex-1 group">
+                    <div className="text-[10px] font-mono font-bold text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity mb-2">
+                      ${products.filter(p => p.type === 'otros').reduce((s, p) => s + p.price, 0).toLocaleString()}
+                    </div>
+                    <div className="h-12 bg-amber-700 w-12 md:w-16 rounded-t-lg shadow-lg shadow-amber-700/15 hover:bg-amber-600 transition-all cursor-pointer" />
+                    <span className="text-[10px] text-neutral-400 mt-2 font-medium">Otros</span>
+                  </div>
+
+                  {/* Category 4 */}
                   <div className="flex flex-col items-center flex-1 group">
                     <div className="text-[10px] font-mono font-bold text-red-500 opacity-0 group-hover:opacity-100 transition-opacity mb-2">
                       ${totalIncome.toLocaleString()}
@@ -577,7 +586,9 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                       </td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-0.5 rounded-full font-mono text-[10px] ${
-                          p.type === 'moto' ? 'bg-red-500/10 text-red-400' : 'bg-neutral-800 text-neutral-400'
+                          p.type === 'moto' ? 'bg-red-500/10 text-red-400' :
+                          p.type === 'pieza' ? 'bg-neutral-800 text-neutral-400' :
+                          'bg-amber-500/10 text-amber-400'
                         }`}>
                           {p.type.toUpperCase()}
                         </span>
@@ -1198,6 +1209,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                   >
                     <option value="moto">Motocicleta (Vehículo)</option>
                     <option value="pieza">Pieza, Repuesto o Accesorio</option>
+                    <option value="otros">Otros (Misceláneos)</option>
                   </select>
                 </div>
               </div>

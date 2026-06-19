@@ -1,4 +1,4 @@
-export type ProductType = 'moto' | 'pieza';
+export type ProductType = 'moto' | 'pieza' | 'otros';
 
 export interface Product {
   id: string;

@@ -24,7 +24,7 @@ export default function SocialPreviewMockup({ product, onClose }: SocialPreviewM
 
   const handleShareReal = () => {
     if (activeNetwork === 'whatsapp') {
-      const text = `Mira esta increíble moto o pieza en Treck Motors Cuba: *${product.name}*\n${product.description}\n\nPrecios y detalles aquí:\n${productUrl}`;
+      const text = `Mira este increíble producto en Treck Motors Cuba: *${product.name}*\n${product.description}\n\nPrecios y detalles aquí:\n${productUrl}`;
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     } else if (activeNetwork === 'twitter') {
       const text = `Mira lo nuevo en Treck Motors Cuba: ${product.name} 🏁🇨🇺`;

@@ -120,6 +120,57 @@ export const initialDbState = {
       ]
     },
     {
+      id: "candado-seguridad",
+      type: "otros",
+      name: "Candado de Seguridad Abus Granit 87",
+      price: 899,
+      image: "https://images.unsplash.com/photo-1585792180666-f7347c4909a1?w=600&auto=format&fit=crop&q=80",
+      description: "Candado en U de alta seguridad fabricado en acero templado con doble bloqueo. Ideal para asegurar motocicletas, bicicletas y equipos de alto valor en Cuba.",
+      category: "Seguridad y Accesorios",
+      stock: 15,
+      features: [
+        "Acero templado con doble bloqueo Abus",
+        "Diámetro de barra de 16 mm",
+        "Cerradura de cilindro ABUS con protección antitaladro",
+        "Incluye dos llaves de precisión codificadas",
+        "Revestimiento protector de goma suave"
+      ]
+    },
+    {
+      id: "kit-herramientas",
+      type: "otros",
+      name: "Kit de Herramientas Mecánico Pro 42 pzs",
+      price: 149,
+      image: "https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?w=600&auto=format&fit=crop&q=80",
+      description: "Maletín profesional de herramientas mecánicas con llaves, dados, destornilladores y alicates en estuche resistente. Compatible con todas las marcas de motos.",
+      category: "Herramientas",
+      stock: 25,
+      features: [
+        "Set completo de 42 piezas en estuche organizador",
+        "Llaves combinadas métricas de 8 mm a 24 mm",
+        "Dados de impacto 1/2\" y 3/8\" con trinquete reversible",
+        "Destornilladores de precisión acerados",
+        "Alicates universales, de corte y punta fina"
+      ]
+    },
+    {
+      id: "lavadora-presion",
+      type: "otros",
+      name: "Hidrolavadora Kärcher K3 Profesional",
+      price: 299,
+      image: "https://images.unsplash.com/photo-1610557892470-55d9e80c0bce?w=600&auto=format&fit=crop&q=80",
+      description: "Hidrolavadora eléctrica de alta presión ideal para el lavado de motocicletas y vehículos en general. Incluye boquilla ajustable, manguera de 10 m y detergente espumante.",
+      category: "Limpieza y Mantenimiento",
+      stock: 10,
+      features: [
+        "Presión máxima de 120 bares",
+        "Motor eléctrico de 1800 W silencioso",
+        "Manguera de alta resistencia de 10 metros",
+        "Boquilla rotativa Vario Power y espumadora",
+        "Depósito integrado para detergente líquido"
+      ]
+    },
+    {
       id: "neumatico-michelin",
       type: "pieza",
       name: "Kit Neumáticos Michelin Power GP2",

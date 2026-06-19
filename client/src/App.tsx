@@ -134,7 +134,7 @@ export default function App() {
   // Catalog Filters State
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('todo');
-  const [selectedProductType, setSelectedProductType] = useState<'all' | 'moto' | 'pieza'>('all');
+  const [selectedProductType, setSelectedProductType] = useState<'all' | 'moto' | 'pieza' | 'otros'>('all');
   
   // Interactive Overlays
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -665,7 +665,7 @@ export default function App() {
                   </span>
                   <input
                     type="text"
-                    placeholder="Buscar moto o pieza original..."
+                    placeholder="Buscar moto, pieza u otro producto..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full bg-transparent border-none py-2.5 px-3 font-sans text-xs text-white focus:outline-none"
@@ -685,7 +685,8 @@ export default function App() {
                   {[
                     { id: 'all', name: 'Todo' },
                     { id: 'moto', name: 'Motos' },
-                    { id: 'pieza', name: 'Componentes' }
+                    { id: 'pieza', name: 'Componentes' },
+                    { id: 'otros', name: 'Otros' }
                   ].map(tab => (
                     <button
                       key={tab.id}
@@ -770,8 +771,12 @@ export default function App() {
                             <Share2 size={13} />
                           </button>
                           
-                          <span className="absolute top-2.5 left-2.5 bg-zinc-950/90 border border-zinc-800 text-[10px] text-zinc-300 px-2 py-0.5 rounded uppercase font-bold tracking-tight">
-                            {p.type === 'moto' ? 'MOTO' : 'PIEZA'}
+                          <span className={`absolute top-2.5 left-2.5 border text-[10px] px-2 py-0.5 rounded uppercase font-bold tracking-tight ${
+                            p.type === 'moto' ? 'bg-zinc-950/90 border-zinc-800 text-zinc-300' :
+                            p.type === 'pieza' ? 'bg-zinc-950/90 border-zinc-800 text-zinc-300' :
+                            'bg-amber-950/90 border-amber-800/60 text-amber-400'
+                          }`}>
+                            {p.type === 'moto' ? 'MOTO' : p.type === 'pieza' ? 'PIEZA' : 'OTROS'}
                           </span>
                         </div>
 
