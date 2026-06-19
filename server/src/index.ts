@@ -64,6 +64,22 @@ app.use('/api/facebook', facebookRouter);
 
 const staticDir = getStaticDir();
 
+function findIndexHtml(): string | null {
+  const candidates = [
+    path.join(staticDir, 'index.html'),
+    path.join(process.cwd(), 'server', 'public', 'index.html'),
+    path.join(__dirname, '..', 'public', 'index.html'),
+    path.join(__dirname, '..', '..', 'public', 'index.html'),
+    path.join(__dirname, '..', '..', 'server', 'public', 'index.html'),
+    path.join(process.cwd(), 'client', 'dist', 'index.html'),
+    path.join(__dirname, '..', '..', 'client', 'dist', 'index.html'),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p;
+  }
+  return null;
+}
+
 app.get(['/product/:id', '/producto/:id'], async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -89,8 +105,8 @@ app.get(['/product/:id', '/producto/:id'], async (req, res, next) => {
     <meta name="twitter:image" content="${image}" />
       `;
 
-      const indexPath = path.join(staticDir, 'index.html');
-      if (fs.existsSync(indexPath)) {
+      const indexPath = findIndexHtml();
+      if (indexPath) {
         let html = fs.readFileSync(indexPath, 'utf-8');
         html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
         html = html.replace('</head>', `${meta}\n</head>`);
@@ -104,10 +120,13 @@ app.get(['/product/:id', '/producto/:id'], async (req, res, next) => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${title}</title>
   ${meta}
-  <script>location.href="/"</script>
 </head>
 <body>
-  <p>Redirigiendo a Treck Motors Cuba...</p>
+  <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0b0b0c;color:#ccc;font-family:sans-serif;flex-direction:column;gap:8px">
+    <h1 style="color:white;font-size:24px">${title}</h1>
+    <p>${description}</p>
+    <a href="${appUrl}/producto/${id}" style="background:#dc2626;color:white;padding:12px 24px;border-radius:12px;text-decoration:none;font-weight:bold;margin-top:12px">Ver producto</a>
+  </div>
 </body>
 </html>`);
     }
