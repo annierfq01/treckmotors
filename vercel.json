@@ -6,36 +6,15 @@
       "use": "@vercel/node",
       "config": {
         "includeFiles": [
-          "server/public/index.html",
-          "server/public/favicon.png"
+          "server/public/**"
         ]
       }
     }
   ],
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/server/api/index.ts"
-    },
-    {
-      "source": "/producto/(.*)",
-      "destination": "/server/api/index.ts"
-    },
-    {
-      "source": "/product/(.*)",
-      "destination": "/server/api/index.ts"
-    },
-    {
-      "source": "/assets/(.*)",
-      "destination": "/server/public/assets/$1"
-    },
-    {
-      "source": "/favicon.png",
-      "destination": "/server/public/favicon.png"
-    },
-    {
       "source": "/(.*)",
-      "destination": "/server/public/index.html"
+      "destination": "/server/api/index.ts"
     }
   ]
 }

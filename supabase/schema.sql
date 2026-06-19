@@ -6,7 +6,7 @@
 -- 1. PRODUCTS TABLE
 CREATE TABLE IF NOT EXISTS public.products (
   id TEXT PRIMARY KEY,
-  type TEXT NOT NULL DEFAULT 'pieza' CHECK (type IN ('moto', 'pieza', 'otros')),
+  type TEXT NOT NULL DEFAULT 'pieza' CHECK (type IN ('moto', 'pieza')),
   name TEXT NOT NULL,
   price NUMERIC NOT NULL DEFAULT 0,
   image TEXT DEFAULT '',
