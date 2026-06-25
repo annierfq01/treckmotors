@@ -66,7 +66,9 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
       setProducts(Array.isArray(productsData) ? productsData : []);
       setOrders(Array.isArray(ordersData) ? ordersData : []);
       setUsers(Array.isArray(usersData) ? usersData : []);
-      setSettings(settingsData && !(settingsData as any).error ? settingsData : null);
+      const loadedSettings = settingsData && !(settingsData as any).error ? settingsData : null;
+      setSettings(loadedSettings);
+      setDraftSettings(loadedSettings);
     } catch (err) {
       console.error("Failed to load administrative panels", err);
     } finally {
@@ -101,12 +103,6 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
 
     return () => eventSource.close();
   }, []);
-
-  useEffect(() => {
-    if (settings) {
-      setDraftSettings(settings);
-    }
-  }, [settings]);
 
   // Calculate statistics
   const totalIncome = orders
@@ -429,8 +425,8 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
               {sseConnected ? 'CONECTADO (SSE)' : 'DESCONECTADO'}
             </span>
           </span>
+              </div>
         </div>
-      </div>
 
       {/* Tabs list navigation */}
       <div className="flex gap-1 bg-black p-1.5 rounded-xl border border-zinc-800 overflow-x-auto select-none">
@@ -832,7 +828,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
         )}
 
         {/* TAB 5: PAYMENT GATEWAYS CONFIG (SETTINGS) */}
-        {activeTab === 'settings' && draftSettings && (
+        {activeTab === 'settings' && settings && draftSettings && (
           <div className="space-y-6">
             <div className="p-4 bg-neutral-900/60 rounded-2xl border border-neutral-800 space-y-4">
               <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
@@ -966,6 +962,36 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 font-mono text-xs text-neutral-300 focus:outline-none focus:border-red-500 transition-colors"
                   />
                 </div>
+              </div>
+
+              {/* SAVE SETTINGS BUTTON */}
+              <div className="flex items-center justify-between gap-4 pt-4 border-t border-zinc-800">
+                <div>
+                  {settingsSaveFeedback && (
+                    <span className={`text-xs font-bold font-sans ${
+                      settingsSaveFeedback.type === 'success' ? 'text-emerald-400' : 'text-red-400'
+                    }`}>
+                      {settingsSaveFeedback.message}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={handleSaveSettings}
+                  disabled={isSavingSettings}
+                  className="px-8 py-3 bg-red-600 hover:bg-red-700 disabled:bg-zinc-800 text-white font-sans text-xs font-black rounded-xl transition-all cursor-pointer disabled:cursor-not-allowed shadow-lg shadow-red-600/15 flex items-center gap-2"
+                >
+                  {isSavingSettings ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Guardando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check size={16} />
+                      <span>Guardar Cambios</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
 
@@ -1182,35 +1208,6 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
               )}
             </div>
 
-            {/* SAVE SETTINGS BUTTON BAR */}
-            <div className="sticky bottom-0 bg-zinc-950/90 backdrop-blur-md border border-zinc-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div>
-                {settingsSaveFeedback && (
-                  <span className={`text-xs font-bold font-sans ${
-                    settingsSaveFeedback.type === 'success' ? 'text-emerald-400' : 'text-red-400'
-                  }`}>
-                    {settingsSaveFeedback.message}
-                  </span>
-                )}
-              </div>
-              <button
-                onClick={handleSaveSettings}
-                disabled={isSavingSettings}
-                className="px-8 py-3 bg-red-600 hover:bg-red-700 disabled:bg-zinc-800 text-white font-sans text-xs font-black rounded-xl transition-all cursor-pointer disabled:cursor-not-allowed shadow-lg shadow-red-600/15 flex items-center gap-2 w-full sm:w-auto justify-center"
-              >
-                {isSavingSettings ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Guardando...</span>
-                  </>
-                ) : (
-                  <>
-                    <Check size={16} />
-                    <span>Guardar Cambios</span>
-                  </>
-                )}
-              </button>
-            </div>
           </div>
         )}
 
