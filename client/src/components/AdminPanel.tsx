@@ -26,6 +26,10 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'orders' | 'users' | 'settings'>('dashboard');
 
+  const [draftSettings, setDraftSettings] = useState<SystemSettings | null>(null);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [settingsSaveFeedback, setSettingsSaveFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
   // Interactive Product Modal State
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -98,6 +102,12 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
     return () => eventSource.close();
   }, []);
 
+  useEffect(() => {
+    if (settings) {
+      setDraftSettings(settings);
+    }
+  }, [settings]);
+
   // Calculate statistics
   const totalIncome = orders
     .filter(o => o.status === 'pagado' || o.status === 'enviado')
@@ -159,56 +169,64 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
     }
   };
 
-  const updateSettings = async (updated: any) => {
+  const handleSaveSettings = async () => {
+    if (!draftSettings) return;
+    setIsSavingSettings(true);
+    setSettingsSaveFeedback(null);
     try {
-      await settingsService.updateSettings(updated);
-      setSettings(updated);
+      await settingsService.updateSettings(draftSettings);
+      setSettings(draftSettings);
+      setSettingsSaveFeedback({ type: 'success', message: 'Configuracion guardada correctamente.' });
+      playSuccessBeep();
+      setTimeout(() => setSettingsSaveFeedback(null), 3500);
     } catch (err) {
       console.error(err);
+      setSettingsSaveFeedback({ type: 'error', message: 'Error al guardar la configuracion.' });
+    } finally {
+      setIsSavingSettings(false);
     }
   };
 
-  const handleToggleSettingsPayment = async () => {
-    if (!settings) return;
-    await updateSettings({ ...settings, paymentsEnabled: !settings.paymentsEnabled });
-    playSuccessBeep();
+  const handleToggleSettingsPayment = () => {
+    if (!draftSettings) return;
+    setDraftSettings({ ...draftSettings, paymentsEnabled: !draftSettings.paymentsEnabled });
   };
 
-  const handleToggleSettingsMethod = async (methodId: string) => {
-    if (!settings) return;
-    const updatedMethods = settings.paymentMethods.map(m => 
+  const handleToggleSettingsMethod = (methodId: string) => {
+    if (!draftSettings) return;
+    const updatedMethods = draftSettings.paymentMethods.map(m => 
       m.id === methodId ? { ...m, enabled: !m.enabled } : m
     );
-    await updateSettings({ ...settings, paymentMethods: updatedMethods });
+    setDraftSettings({ ...draftSettings, paymentMethods: updatedMethods });
   };
 
-  const handleUpdateMethodDetails = async (methodId: string, details: string) => {
-    if (!settings) return;
-    const updatedMethods = settings.paymentMethods.map(m => 
+  const handleUpdateMethodDetails = (methodId: string, details: string) => {
+    if (!draftSettings) return;
+    const updatedMethods = draftSettings.paymentMethods.map(m => 
       m.id === methodId ? { ...m, details: details } : m
     );
-    await updateSettings({ ...settings, paymentMethods: updatedMethods });
+    setDraftSettings({ ...draftSettings, paymentMethods: updatedMethods });
   };
 
-  const handleUpdatePaypalField = async (field: 'email' | 'clientId' | 'sandboxMode', value: any) => {
-    if (!settings) return;
-    const updatedMethods = settings.paymentMethods.map(m => 
+  const handleUpdatePaypalField = (field: 'email' | 'clientId' | 'sandboxMode', value: any) => {
+    if (!draftSettings) return;
+    const updatedMethods = draftSettings.paymentMethods.map(m => 
       m.id === 'paypal' ? { ...m, [field]: value } : m
     );
-    await updateSettings({ ...settings, paymentMethods: updatedMethods });
+    setDraftSettings({ ...draftSettings, paymentMethods: updatedMethods });
   };
 
-  const handleUpdateContactField = async (
+  const handleUpdateContactField = (
     field: 'contactPhone' | 'contactEmail' | 'shopAddress' | 'shopHours' | 'facebookUrl' | 'instagramUrl' | 'whatsappNumber',
     value: string
   ) => {
-    if (!settings) return;
-    await updateSettings({ ...settings, [field]: value });
+    if (!draftSettings) return;
+    setDraftSettings({ ...draftSettings, [field]: value });
   };
 
-  const handleToggleReservations = async () => {
-    if (!settings) return;
-    await updateSettings({ ...settings, reservationsEnabled: !settings.reservationsEnabled });
+  const handleToggleReservations = () => {
+    if (!draftSettings) return;
+    setDraftSettings({ ...draftSettings, reservationsEnabled: !draftSettings.reservationsEnabled });
   };
 
   // Product CRUD
@@ -613,7 +631,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                           >
                             <Edit2 size={12} />
                           </button>
-                          {settings?.facebookPageId && (
+              {settings?.facebookPageId && (
                             <button
                               onClick={async () => {
                                 try {
@@ -814,7 +832,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
         )}
 
         {/* TAB 5: PAYMENT GATEWAYS CONFIG (SETTINGS) */}
-        {activeTab === 'settings' && settings && (
+        {activeTab === 'settings' && draftSettings && (
           <div className="space-y-6">
             <div className="p-4 bg-neutral-900/60 rounded-2xl border border-neutral-800 space-y-4">
               <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
@@ -831,12 +849,12 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                     <button
                       onClick={handleToggleSettingsPayment}
                       className={`px-4 py-2 rounded-xl text-xs font-bold font-sans transition-all cursor-pointer ${
-                        settings.paymentsEnabled
+                        draftSettings.paymentsEnabled
                           ? 'bg-red-600 text-white shadow-lg shadow-red-600/15'
                           : 'bg-neutral-800 text-neutral-500'
                       }`}
                     >
-                      {settings.paymentsEnabled ? 'HABILITADA' : 'DESHABILITADA'}
+                      {draftSettings.paymentsEnabled ? 'HABILITADA' : 'DESHABILITADA'}
                     </button>
                   </div>
 
@@ -847,12 +865,12 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                     <button
                       onClick={handleToggleReservations}
                       className={`px-4 py-2 rounded-xl text-xs font-bold font-sans transition-all cursor-pointer ${
-                        settings.reservationsEnabled
+                        draftSettings.reservationsEnabled
                           ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/15'
                           : 'bg-neutral-800 text-neutral-400'
                       }`}
                     >
-                      {settings.reservationsEnabled ? 'ACTIVO (Habilitado)' : 'ALMACÉN (Deshabilitado)'}
+                      {draftSettings.reservationsEnabled ? 'ACTIVO (Habilitado)' : 'ALMACÉN (Deshabilitado)'}
                     </button>
                   </div>
                 </div>
@@ -876,7 +894,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                   <label className="block text-[10px] font-bold text-neutral-400 mb-1">TELÉFONO DE CONTACTO</label>
                   <input
                     type="text"
-                    value={settings.contactPhone || ''}
+                    value={draftSettings.contactPhone || ''}
                     onChange={(e) => handleUpdateContactField('contactPhone', e.target.value)}
                     placeholder="Ej: +53 5212 3456"
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 font-mono text-xs text-neutral-300 focus:outline-none focus:border-red-500 transition-colors"
@@ -887,7 +905,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                   <label className="block text-[10px] font-bold text-neutral-400 mb-1">CORREO ELECTRÓNICO</label>
                   <input
                     type="email"
-                    value={settings.contactEmail || ''}
+                    value={draftSettings.contactEmail || ''}
                     onChange={(e) => handleUpdateContactField('contactEmail', e.target.value)}
                     placeholder="Ej: cuba@treckmotors.com"
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 font-sans text-xs text-neutral-300 focus:outline-none focus:border-red-500 transition-colors"
@@ -898,7 +916,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                   <label className="block text-[10px] font-bold text-neutral-400 mb-1">DIRECCIÓN FÍSICA DEL SHOWROOM (BAYAMO)</label>
                   <input
                     type="text"
-                    value={settings.shopAddress || ''}
+                    value={draftSettings.shopAddress || ''}
                     onChange={(e) => handleUpdateContactField('shopAddress', e.target.value)}
                     placeholder="Ej: Calle General García #102, e/ Lora y Masó, Bayamo, Granma, Cuba"
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 font-sans text-xs text-neutral-300 focus:outline-none focus:border-red-500 transition-colors"
@@ -909,7 +927,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                   <label className="block text-[10px] font-bold text-neutral-400 mb-1">HORARIO COMERCIAL DE ATENCIÓN</label>
                   <input
                     type="text"
-                    value={settings.shopHours || ''}
+                    value={draftSettings.shopHours || ''}
                     onChange={(e) => handleUpdateContactField('shopHours', e.target.value)}
                     placeholder="Ej: Lunes a Viernes: 8:30 AM - 5:30 PM | Sábados: 9:00 AM - 1:00 PM"
                     className="w-full bg-neutral-950 border border-neutral-805 border-neutral-800 rounded-xl px-3 py-2 font-sans text-xs text-neutral-300 focus:outline-none focus:border-red-500 transition-colors"
@@ -920,7 +938,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                   <label className="block text-[10px] font-bold text-neutral-400 mb-1">ENLACE DE FACEBOOK (BOTÓN ICONO)</label>
                   <input
                     type="url"
-                    value={settings.facebookUrl || ''}
+                    value={draftSettings.facebookUrl || ''}
                     onChange={(e) => handleUpdateContactField('facebookUrl', e.target.value)}
                     placeholder="Ej: https://facebook.com/treckmotorscuba"
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 font-sans text-xs text-neutral-300 focus:outline-none focus:border-red-500 transition-colors"
@@ -931,7 +949,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                   <label className="block text-[10px] font-bold text-neutral-400 mb-1">ENLACE DE INSTAGRAM (BOTÓN ICONO)</label>
                   <input
                     type="url"
-                    value={settings.instagramUrl || ''}
+                    value={draftSettings.instagramUrl || ''}
                     onChange={(e) => handleUpdateContactField('instagramUrl', e.target.value)}
                     placeholder="Ej: https://instagram.com/treckmotorscuba"
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 font-sans text-xs text-neutral-300 focus:outline-none focus:border-red-500 transition-colors"
@@ -942,7 +960,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                   <label className="block text-[10px] font-bold text-neutral-400 mb-1">NÚMERO DE WHATSAPP (CON PREFIJO DE PAÍS, SIN SIGNOS NI ESPACIOS)</label>
                   <input
                     type="text"
-                    value={settings.whatsappNumber || ''}
+                    value={draftSettings.whatsappNumber || ''}
                     onChange={(e) => handleUpdateContactField('whatsappNumber', e.target.value)}
                     placeholder="Ej: 5352123456"
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 font-mono text-xs text-neutral-300 focus:outline-none focus:border-red-500 transition-colors"
@@ -956,7 +974,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
               <h4 className="font-sans font-bold text-sm text-neutral-200">Métodos de Pago Admitidos</h4>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {settings.paymentMethods.map(method => (
+                {draftSettings.paymentMethods.map(method => (
                   <div key={method.id} className="bg-neutral-900/50 border border-neutral-800/80 rounded-2xl p-4 flex flex-col justify-between space-y-4">
                     <div className="space-y-2">
                       <div className="flex justify-between items-start">
@@ -1045,7 +1063,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
               </div>
 
               <div className="bg-black/40 border border-zinc-800 p-4 rounded-xl space-y-3">
-                {settings.facebookPageId ? (
+                {draftSettings.facebookPageId ? (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -1053,15 +1071,15 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                           <Facebook size={14} className="text-blue-500" />
                         </div>
                         <div>
-                          <div className="text-xs font-bold text-white">{settings.facebookPageName || 'Página conectada'}</div>
+                          <div className="text-xs font-bold text-white">{draftSettings.facebookPageName || 'Página conectada'}</div>
                           <div className="text-[10px] text-emerald-400 font-mono">✓ Conectado</div>
                         </div>
                       </div>
                       <button
-                        onClick={async () => {
+                        onClick={() => {
                           if (confirm('¿Desconectar página de Facebook? Las configuradas se eliminarán.')) {
-                            await updateSettings({
-                              ...settings,
+                            setDraftSettings({
+                              ...draftSettings,
                               facebookPageId: '',
                               facebookPageAccessToken: '',
                               facebookPageName: '',
@@ -1076,7 +1094,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                     </div>
                     <div className="text-[10px] text-zinc-400">
                       <span className="text-zinc-500">Page ID: </span>
-                      <span className="font-mono text-zinc-300">{settings.facebookPageId}</span>
+                      <span className="font-mono text-zinc-300">{draftSettings.facebookPageId}</span>
                     </div>
                   </div>
                 ) : (
@@ -1153,7 +1171,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                 )}
               </div>
 
-              {settings.facebookPageId && (
+              {draftSettings.facebookPageId && (
                 <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3 flex items-start gap-2">
                   <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1 shrink-0" />
                   <p className="text-[10px] text-emerald-400 leading-relaxed">
@@ -1162,6 +1180,36 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                   </p>
                 </div>
               )}
+            </div>
+
+            {/* SAVE SETTINGS BUTTON BAR */}
+            <div className="sticky bottom-0 bg-zinc-950/90 backdrop-blur-md border border-zinc-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div>
+                {settingsSaveFeedback && (
+                  <span className={`text-xs font-bold font-sans ${
+                    settingsSaveFeedback.type === 'success' ? 'text-emerald-400' : 'text-red-400'
+                  }`}>
+                    {settingsSaveFeedback.message}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={handleSaveSettings}
+                disabled={isSavingSettings}
+                className="px-8 py-3 bg-red-600 hover:bg-red-700 disabled:bg-zinc-800 text-white font-sans text-xs font-black rounded-xl transition-all cursor-pointer disabled:cursor-not-allowed shadow-lg shadow-red-600/15 flex items-center gap-2 w-full sm:w-auto justify-center"
+              >
+                {isSavingSettings ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Guardando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check size={16} />
+                    <span>Guardar Cambios</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         )}
