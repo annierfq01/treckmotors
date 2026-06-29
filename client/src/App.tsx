@@ -339,63 +339,99 @@ export default function App() {
             >
             
               {/* HERO MOTOCICLETAS TRECK CAROUSEL HIGHLIGHT */}
-              <div className="relative rounded-3xl overflow-hidden min-h-[460px] md:min-h-[520px] flex items-center bg-gradient-to-r from-zinc-950 via-zinc-900 to-black border border-zinc-805 border-zinc-800 p-6 md:p-12 relative">
+              <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-zinc-950 via-zinc-900 to-black border border-zinc-805 border-zinc-800 relative">
                 <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#dc2626_1px,#000_1px)] bg-[size:16px_16px]" />
                 
-                {/* Mobile: fixed background image with fade-to-black gradient */}
-                <div className="absolute inset-0 z-0 lg:hidden">
-                  <div 
-                    className="w-full h-full bg-cover bg-center bg-fixed" 
-                    style={{ 
-                      backgroundImage: `url('${settings?.shopImage || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=1000&auto=format&fit=crop&q=80'}')`,
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-zinc-950/60 to-zinc-950" />
+                {/* Mobile: image alone at top, text below, scroll fades to black */}
+                <div className="lg:hidden relative" style={{ minHeight: '200vh' }}>
+                  <div className="absolute inset-0 z-0">
+                    <div 
+                      className="absolute inset-0 bg-cover bg-center bg-fixed" 
+                      style={{ 
+                        backgroundImage: `url('${settings?.shopImage || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=1000&auto=format&fit=crop&q=80'}')`,
+                      }}
+                    />
+                  </div>
+                  <div className="absolute inset-0 z-[1] bg-gradient-to-b from-transparent from-0% via-zinc-950/40 via-[60%] to-zinc-950 to-100%" />
+                  <div style={{ height: '100vh' }} />
+                  <div className="relative z-10 px-6 pb-8 md:px-12 md:pb-12 space-y-6 text-left">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600/10 text-red-500 text-[10px] font-mono font-bold uppercase tracking-widest border border-red-500/20">
+                      <Sparkles size={11} className="animate-pulse" />
+                      Sucursal Premium Cuba — Distribución Autorizada
+                    </div>
+                    
+                    <h1 className="font-display font-black text-3xl sm:text-5xl lg:text-6xl text-white uppercase tracking-tighter leading-none">
+                      TRECK <span className="text-red-600">MOTORS</span> <br />
+                      <span className="text-zinc-400">PASIÓN</span> EN CUBA
+                    </h1>
+                    
+                    <p className="font-sans text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-md">
+                      El proveedor líder en motocicletas de alta gama, repuestos originales y servicio de taller certificado. Reserva tus productos de manera digital sin pagos por adelantado y ven a retirarlos con total confianza.
+                    </p>
+
+                    <div className="pt-2 flex gap-3">
+                      <button
+                        onClick={() => setCurrentView('catalog')}
+                        className="px-6 py-3.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-sans text-xs font-black tracking-tight transition-all cursor-pointer shadow-lg shadow-red-600/20 flex items-center gap-2 group hover:scale-[1.02]"
+                      >
+                        <span>Explorar Catálogo</span>
+                        <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+                      </button>
+                      <a
+                        href={`tel:${settings?.contactPhone || '+53 5212 3456'}`}
+                        className="px-5 py-3.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-neutral-200 hover:text-white font-sans text-xs font-bold transition-all cursor-pointer flex items-center gap-2"
+                      >
+                        <span>Llamar al Showroom</span>
+                      </a>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Desktop: image on right side with clipPath */}
-                <div className="absolute right-0 bottom-0 top-0 w-[55%] hidden lg:block z-0">
-                  <div 
-                    className="w-full h-full bg-cover bg-center scale-105" 
-                    style={{ 
-                      backgroundImage: `url('${settings?.shopImage || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=1000&auto=format&fit=crop&q=80'}')`,
-                      clipPath: 'polygon(18% 0%, 100% 0%, 100% 100%, 0% 100%)'
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/40 to-transparent" />
-                </div>
+                <div className="hidden lg:flex items-center min-h-[520px] p-12 relative">
+                  <div className="absolute right-0 bottom-0 top-0 w-[55%] z-0">
+                    <div 
+                      className="w-full h-full bg-cover bg-center scale-105" 
+                      style={{ 
+                        backgroundImage: `url('${settings?.shopImage || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=1000&auto=format&fit=crop&q=80'}')`,
+                        clipPath: 'polygon(18% 0%, 100% 0%, 100% 100%, 0% 100%)'
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/40 to-transparent" />
+                  </div>
 
-              <div className="max-w-xl space-y-6 relative z-10 text-left">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600/10 text-red-500 text-[10px] font-mono font-bold uppercase tracking-widest border border-red-500/20">
-                  <Sparkles size={11} className="animate-pulse" />
-                  Sucursal Premium Cuba — Distribución Autorizada
-                </div>
-                
-                <h1 className="font-display font-black text-3xl sm:text-5xl lg:text-6xl text-white uppercase tracking-tighter leading-none">
-                  TRECK <span className="text-red-600">MOTORS</span> <br />
-                  <span className="text-zinc-400">PASIÓN</span> EN CUBA
-                </h1>
-                
-                <p className="font-sans text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-md">
-                  El proveedor líder en motocicletas de alta gama, repuestos originales y servicio de taller certificado. Reserva tus productos de manera digital sin pagos por adelantado y ven a retirarlos con total confianza.
-                </p>
+                  <div className="max-w-xl space-y-6 relative z-10 text-left">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600/10 text-red-500 text-[10px] font-mono font-bold uppercase tracking-widest border border-red-500/20">
+                      <Sparkles size={11} className="animate-pulse" />
+                      Sucursal Premium Cuba — Distribución Autorizada
+                    </div>
+                    
+                    <h1 className="font-display font-black text-3xl sm:text-5xl lg:text-6xl text-white uppercase tracking-tighter leading-none">
+                      TRECK <span className="text-red-600">MOTORS</span> <br />
+                      <span className="text-zinc-400">PASIÓN</span> EN CUBA
+                    </h1>
+                    
+                    <p className="font-sans text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-md">
+                      El proveedor líder en motocicletas de alta gama, repuestos originales y servicio de taller certificado. Reserva tus productos de manera digital sin pagos por adelantado y ven a retirarlos con total confianza.
+                    </p>
 
-                <div className="pt-2 flex gap-3">
-                  <button
-                    onClick={() => setCurrentView('catalog')}
-                    className="px-6 py-3.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-sans text-xs font-black tracking-tight transition-all cursor-pointer shadow-lg shadow-red-600/20 flex items-center gap-2 group hover:scale-[1.02]"
-                  >
-                    <span>Explorar Catálogo</span>
-                    <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
-                  </button>
-                  <a
-                    href={`tel:${settings?.contactPhone || '+53 5212 3456'}`}
-                    className="px-5 py-3.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-neutral-200 hover:text-white font-sans text-xs font-bold transition-all cursor-pointer flex items-center gap-2"
-                  >
-                    <span>Llamar al Showroom</span>
-                  </a>
+                    <div className="pt-2 flex gap-3">
+                      <button
+                        onClick={() => setCurrentView('catalog')}
+                        className="px-6 py-3.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-sans text-xs font-black tracking-tight transition-all cursor-pointer shadow-lg shadow-red-600/20 flex items-center gap-2 group hover:scale-[1.02]"
+                      >
+                        <span>Explorar Catálogo</span>
+                        <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+                      </button>
+                      <a
+                        href={`tel:${settings?.contactPhone || '+53 5212 3456'}`}
+                        className="px-5 py-3.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-neutral-200 hover:text-white font-sans text-xs font-bold transition-all cursor-pointer flex items-center gap-2"
+                      >
+                        <span>Llamar al Showroom</span>
+                      </a>
+                    </div>
+                  </div>
                 </div>
-              </div>
             </div>
 
             {/* SECCIÓN DE DATOS DE CONFIANZA / BENEFICIOS */}
