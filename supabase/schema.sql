@@ -72,6 +72,21 @@ CREATE TABLE IF NOT EXISTS public.settings (
   facebook_page_id TEXT DEFAULT '',
   facebook_page_access_token TEXT DEFAULT '',
   facebook_page_name TEXT DEFAULT '',
+  shop_image TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 6. BRANCHES TABLE (subcursales / almacenes)
+CREATE TABLE IF NOT EXISTS public.branches (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  address TEXT DEFAULT '',
+  phone TEXT DEFAULT '',
+  email TEXT DEFAULT '',
+  schedule TEXT DEFAULT '',
+  image TEXT DEFAULT '',
+  is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -85,6 +100,7 @@ CREATE INDEX IF NOT EXISTS idx_orders_user_email ON public.orders (user_email);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON public.orders (status);
 CREATE INDEX IF NOT EXISTS idx_reviews_product_id ON public.reviews (product_id);
 CREATE INDEX IF NOT EXISTS idx_users_email ON public.users (email);
+CREATE INDEX IF NOT EXISTS idx_branches_is_active ON public.branches (is_active);
 
 -- ============================================================
 -- AUTO UPDATE updated_at TRIGGER
@@ -111,6 +127,10 @@ BEGIN
     CREATE TRIGGER set_settings_updated_at BEFORE UPDATE ON public.settings
       FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
   END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'set_branches_updated_at') THEN
+    CREATE TRIGGER set_branches_updated_at BEFORE UPDATE ON public.branches
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  END IF;
 END $$;
 
 -- ============================================================
@@ -121,6 +141,7 @@ ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.branches ENABLE ROW LEVEL SECURITY;
 
 DO $$
 BEGIN
@@ -135,6 +156,10 @@ BEGIN
 
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'settings' AND policyname = 'Allow public read settings') THEN
     CREATE POLICY "Allow public read settings" ON public.settings FOR SELECT USING (true);
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'branches' AND policyname = 'Allow public read branches') THEN
+    CREATE POLICY "Allow public read branches" ON public.branches FOR SELECT USING (true);
   END IF;
 
   -- Allow authenticated users to insert reviews
@@ -161,5 +186,9 @@ BEGIN
 
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'settings' AND policyname = 'Allow service_role all settings') THEN
     CREATE POLICY "Allow service_role all settings" ON public.settings FOR ALL USING (auth.role() = 'service_role');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'branches' AND policyname = 'Allow service_role all branches') THEN
+    CREATE POLICY "Allow service_role all branches" ON public.branches FOR ALL USING (auth.role() = 'service_role');
   END IF;
 END $$;

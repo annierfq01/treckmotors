@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Product, Order, User, SystemSettings, OrderStatus, ProductType } from '../types';
+import { Product, Order, User, SystemSettings, OrderStatus, ProductType, Branch } from '../types';
 import { 
   BarChart3, Plus, Edit2, Trash2, Shield, UserX, UserCheck, Settings, 
   TrendingUp, CreditCard, ShoppingBag, Users, Layers, AlertCircle, 
-  Sparkles, Check, Database, RefreshCw, Eye, Facebook
+  Sparkles, Check, Database, RefreshCw, Eye, Facebook, Image, MapPin, Store
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { playSuccessBeep } from '../utils/audio';
@@ -11,6 +11,7 @@ import * as productsService from '../services/products';
 import * as ordersService from '../services/orders';
 import * as usersService from '../services/users';
 import * as settingsService from '../services/settings';
+import * as branchesService from '../services/branches';
 
 interface AdminPanelProps {
   currentAdminEmail: string;
@@ -29,6 +30,11 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
   const [draftSettings, setDraftSettings] = useState<SystemSettings | null>(null);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [settingsSaveFeedback, setSettingsSaveFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
+  const [branchForm, setBranchForm] = useState({ name: '', address: '', phone: '', email: '', schedule: '', image: '' });
+  const [showBranchModal, setShowBranchModal] = useState(false);
 
   // Interactive Product Modal State
   const [showProductModal, setShowProductModal] = useState(false);
@@ -56,11 +62,12 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [productsData, ordersData, usersData, settingsData] = await Promise.all([
+      const [productsData, ordersData, usersData, settingsData, branchesData] = await Promise.all([
         productsService.getProducts(),
         ordersService.getOrders(),
         usersService.getUsers(),
-        settingsService.getSettings()
+        settingsService.getSettings(),
+        branchesService.getBranches(),
       ]);
 
       setProducts(Array.isArray(productsData) ? productsData : []);
@@ -69,6 +76,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
       const loadedSettings = settingsData && !(settingsData as any).error ? settingsData : null;
       setSettings(loadedSettings);
       setDraftSettings(loadedSettings);
+      setBranches(Array.isArray(branchesData) ? branchesData : []);
     } catch (err) {
       console.error("Failed to load administrative panels", err);
     } finally {
@@ -213,7 +221,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
   };
 
   const handleUpdateContactField = (
-    field: 'contactPhone' | 'contactEmail' | 'shopAddress' | 'shopHours' | 'facebookUrl' | 'instagramUrl' | 'whatsappNumber',
+    field: 'contactPhone' | 'contactEmail' | 'shopAddress' | 'shopHours' | 'facebookUrl' | 'instagramUrl' | 'whatsappNumber' | 'shopImage',
     value: string
   ) => {
     if (!draftSettings) return;
@@ -964,6 +972,58 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                 </div>
               </div>
 
+              {/* SHOP IMAGE */}
+              <div className="pt-4 border-t border-zinc-800">
+                <label className="block text-[10px] font-bold text-neutral-400 mb-2">IMAGEN DE LA TIENDA (FOTO DEL LOCAL / SHOWROOM)</label>
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    value={draftSettings.shopImage || ''}
+                    onChange={(e) => handleUpdateContactField('shopImage', e.target.value)}
+                    placeholder="https://ejemplo.com/imagen-del-local.jpg"
+                    className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 font-sans text-xs text-neutral-300 focus:outline-none focus:border-red-500 transition-colors"
+                  />
+                  <label className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5 shrink-0">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const { uploadImage } = await import('../services/storage');
+                        const ext = file.name.split('.').pop() || 'jpg';
+                        const fileName = `shop/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+                        const reader = new FileReader();
+                        const base64 = await new Promise<string>((resolve) => {
+                          reader.onload = () => resolve((reader.result as string).split(',')[1]);
+                          reader.readAsDataURL(file);
+                        });
+                        try {
+                          const result = await uploadImage('products', fileName, base64, file.type);
+                          setDraftSettings({ ...draftSettings, shopImage: result.url });
+                          playSuccessBeep();
+                        } catch (err) {
+                          console.error(err);
+                          alert('Error al subir la imagen.');
+                        }
+                      }}
+                    />
+                    Subir Foto
+                  </label>
+                </div>
+                {draftSettings.shopImage && (
+                  <div className="mt-2 relative w-full h-32 bg-neutral-950 rounded-xl overflow-hidden border border-neutral-800">
+                    <img
+                      src={draftSettings.shopImage}
+                      alt="Vista previa de la tienda"
+                      className="w-full h-full object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  </div>
+                )}
+              </div>
+
               {/* SAVE SETTINGS BUTTON */}
               <div className="flex items-center justify-between gap-4 pt-4 border-t border-zinc-800">
                 <div>
@@ -1208,6 +1268,86 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
               )}
             </div>
 
+            {/* SUCRUSALES / ALMACENES */}
+            <div className="bg-neutral-900/60 rounded-2xl border border-neutral-800 p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-sans font-extrabold text-sm text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <Store size={14} className="text-red-500" />
+                    Sucursales y Almacenes
+                  </h4>
+                  <p className="font-sans text-[11px] text-neutral-400 mt-1">
+                    Gestiona las diferentes sucursales y puntos de recogida físicos en Cuba.
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setEditingBranch(null);
+                    setBranchForm({ name: '', address: '', phone: '', email: '', schedule: '', image: '' });
+                    setShowBranchModal(true);
+                  }}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <Plus size={14} />
+                  <span>Agregar Sucursal</span>
+                </button>
+              </div>
+
+              {branches.length === 0 ? (
+                <div className="text-center py-8 border border-dashed border-zinc-800 rounded-xl">
+                  <Store size={24} className="text-zinc-700 mx-auto mb-2" />
+                  <p className="text-[11px] text-zinc-500">No hay sucursales registradas. Agrega la primera.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {branches.map(b => (
+                    <div key={b.id} className="bg-black/40 border border-zinc-800 rounded-xl p-3 flex gap-3">
+                      {b.image && (
+                        <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-zinc-950 border border-zinc-800">
+                          <img src={b.image} alt={b.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h5 className="text-xs font-bold text-white truncate">{b.name}</h5>
+                          <span className={`w-2 h-2 rounded-full ${b.isActive ? 'bg-emerald-500' : 'bg-zinc-600'}`} />
+                        </div>
+                        <p className="text-[10px] text-zinc-400 truncate flex items-center gap-1"><MapPin size={10} />{b.address}</p>
+                        {b.phone && <p className="text-[10px] text-zinc-500 font-mono">{b.phone}</p>}
+                        <div className="flex gap-2 pt-1">
+                          <button
+                            onClick={() => {
+                              setEditingBranch(b);
+                              setBranchForm({ name: b.name, address: b.address, phone: b.phone, email: b.email, schedule: b.schedule, image: b.image });
+                              setShowBranchModal(true);
+                            }}
+                            className="px-2 py-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white text-[9px] font-bold rounded-lg transition-all cursor-pointer"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (confirm(`¿Eliminar la sucursal "${b.name}"?`)) {
+                                try {
+                                  await branchesService.deleteBranch(b.id);
+                                  setBranches(prev => prev.filter(x => x.id !== b.id));
+                                  playSuccessBeep();
+                                } catch (err) {
+                                  console.error(err);
+                                }
+                              }
+                            }}
+                            className="px-2 py-1 bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-500 hover:text-red-400 text-[9px] font-bold rounded-lg transition-all cursor-pointer"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -1395,6 +1535,171 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                 >
                   <Check size={14} />
                   <span>Guardar Producto</span>
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Branch Add/Edit Modal */}
+      {showBranchModal && (
+        <div className="fixed inset-0 bg-neutral-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl"
+          >
+            <div className="px-6 py-4 bg-neutral-950 border-b border-neutral-800 flex justify-between items-center">
+              <h3 className="font-sans font-bold text-base text-white">
+                {editingBranch ? 'Editar Sucursal' : 'Agregar Nueva Sucursal'}
+              </h3>
+              <button 
+                onClick={() => setShowBranchModal(false)}
+                className="text-neutral-400 hover:text-white font-bold cursor-pointer"
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              if (!branchForm.name.trim()) {
+                alert('El nombre de la sucursal es requerido.');
+                return;
+              }
+              try {
+                if (editingBranch) {
+                  const updated = await branchesService.updateBranch(editingBranch.id, branchForm);
+                  setBranches(prev => prev.map(b => b.id === editingBranch.id ? updated : b));
+                } else {
+                  const created = await branchesService.createBranch(branchForm);
+                  setBranches(prev => [...prev, created]);
+                }
+                setShowBranchModal(false);
+                playSuccessBeep();
+              } catch (err) {
+                console.error(err);
+                alert('Error al guardar la sucursal.');
+              }
+            }} className="p-6 space-y-4">
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 mb-1">NOMBRE DE LA SUCURSAL *</label>
+                <input
+                  type="text"
+                  required
+                  value={branchForm.name}
+                  onChange={(e) => setBranchForm({ ...branchForm, name: e.target.value })}
+                  placeholder="Ej: Sucursal Bayamo Centro"
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2 font-sans text-xs text-white focus:outline-none focus:border-red-500 transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 mb-1">DIRECCIÓN</label>
+                <input
+                  type="text"
+                  value={branchForm.address}
+                  onChange={(e) => setBranchForm({ ...branchForm, address: e.target.value })}
+                  placeholder="Ej: Calle Principal #123, Bayamo, Granma"
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2 font-sans text-xs text-white focus:outline-none focus:border-red-500 transition-colors"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-neutral-400 mb-1">TELÉFONO</label>
+                  <input
+                    type="text"
+                    value={branchForm.phone}
+                    onChange={(e) => setBranchForm({ ...branchForm, phone: e.target.value })}
+                    placeholder="+53 5212 3456"
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2 font-mono text-xs text-white focus:outline-none focus:border-red-500 transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-neutral-400 mb-1">CORREO</label>
+                  <input
+                    type="email"
+                    value={branchForm.email}
+                    onChange={(e) => setBranchForm({ ...branchForm, email: e.target.value })}
+                    placeholder="sucursal@treckmotors.com"
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2 font-sans text-xs text-white focus:outline-none focus:border-red-500 transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 mb-1">HORARIO DE ATENCIÓN</label>
+                <input
+                  type="text"
+                  value={branchForm.schedule}
+                  onChange={(e) => setBranchForm({ ...branchForm, schedule: e.target.value })}
+                  placeholder="Lun-Vie: 8:30-17:30, Sáb: 9:00-13:00"
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2 font-sans text-xs text-white focus:outline-none focus:border-red-500 transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-400 mb-1">IMAGEN DE LA SUCURSAL (OPCIONAL)</label>
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    value={branchForm.image}
+                    onChange={(e) => setBranchForm({ ...branchForm, image: e.target.value })}
+                    placeholder="https://ejemplo.com/foto-sucursal.jpg"
+                    className="flex-1 w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2 font-sans text-xs text-white focus:outline-none focus:border-red-500 transition-colors"
+                  />
+                  <label className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5 shrink-0">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const { uploadImage } = await import('../services/storage');
+                        const ext = file.name.split('.').pop() || 'jpg';
+                        const fileName = `branches/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+                        const reader = new FileReader();
+                        const base64 = await new Promise<string>((resolve) => {
+                          reader.onload = () => resolve((reader.result as string).split(',')[1]);
+                          reader.readAsDataURL(file);
+                        });
+                        try {
+                          const result = await uploadImage('products', fileName, base64, file.type);
+                          setBranchForm({ ...branchForm, image: result.url });
+                          playSuccessBeep();
+                        } catch (err) {
+                          console.error(err);
+                          alert('Error al subir la imagen.');
+                        }
+                      }}
+                    />
+                    Subir Foto
+                  </label>
+                </div>
+                {branchForm.image && (
+                  <div className="mt-2 h-24 bg-neutral-950 rounded-xl overflow-hidden border border-neutral-800">
+                    <img src={branchForm.image} alt="Preview sucursal" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4 border-t border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setShowBranchModal(false)}
+                  className="px-5 py-2.5 border border-neutral-800 hover:bg-neutral-800 text-neutral-400 rounded-xl font-sans text-xs cursor-pointer transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-sans text-xs font-bold rounded-xl transition-colors flex items-center gap-1 shadow-lg shadow-red-600/10 cursor-pointer"
+                >
+                  <Check size={14} />
+                  <span>{editingBranch ? 'Actualizar Sucursal' : 'Crear Sucursal'}</span>
                 </button>
               </div>
             </form>

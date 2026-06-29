@@ -17,6 +17,7 @@ import reviewsRouter from './routes/reviews.js';
 import settingsRouter from './routes/settings.js';
 import storageRouter from './routes/storage.js';
 import facebookRouter from './routes/facebook.js';
+import branchesRouter from './routes/branches.js';
 import { supabaseAdmin } from './supabase.js';
 import { runAllSeeds } from './services/seed.js';
 
@@ -61,6 +62,7 @@ app.use('/api/reviews', reviewsRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/storage', storageRouter);
 app.use('/api/facebook', facebookRouter);
+app.use('/api/branches', branchesRouter);
 
 const staticDir = getStaticDir();
 

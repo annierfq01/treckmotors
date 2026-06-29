@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { HelmetProvider } from 'react-helmet-async';
-import { Product, Order, User, ProductReview, SystemSettings } from './types';
+import { Product, Order, User, ProductReview, SystemSettings, Branch } from './types';
 import Navigation from './components/Navigation';
 import AdminPanel from './components/AdminPanel';
 import ReservationModal from './components/ReservationModal';
@@ -10,7 +10,7 @@ import ProductPage from './components/ProductPage';
 import { 
   Flame, Search, ArrowRight, ShieldAlert,
   ShoppingBag, Calendar, Phone, MapPin, Sparkles, Check, Info, Share2, HelpCircle, Star, Ticket, ShieldCheck, Mail, Clock,
-  Facebook, Instagram, MessageCircle
+  Facebook, Instagram, MessageCircle, Store
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { playSuccessBeep } from './utils/audio';
@@ -19,6 +19,7 @@ import * as productsService from './services/products';
 import * as ordersService from './services/orders';
 import * as reviewsService from './services/reviews';
 import * as settingsService from './services/settings';
+import * as branchesService from './services/branches';
 
 export default function App() {
   // Application Global States
@@ -26,6 +27,7 @@ export default function App() {
   const [reviews, setReviews] = useState<ProductReview[]>([]);
   const [customerOrders, setCustomerOrders] = useState<Order[]>([]);
   const [settings, setSettings] = useState<SystemSettings | null>(null);
+  const [branches, setBranches] = useState<Branch[]>([]);
   
   const [currentUser, setCurrentUser] = useState<{ 
     email: string; 
@@ -234,6 +236,16 @@ export default function App() {
     }
   };
 
+  const loadBranches = async () => {
+    try {
+      const data = await branchesService.getBranches();
+      setBranches(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error loading branches", err);
+      setBranches([]);
+    }
+  };
+
   const handlePublishToFacebook = async (productId: string) => {
     try {
       const fbService = await import('./services/facebook');
@@ -253,6 +265,7 @@ export default function App() {
     loadReviews();
     loadCustomerOrders();
     loadSettings();
+    loadBranches();
   }, [currentUser.email]);
 
   // Helper selectors
@@ -325,21 +338,20 @@ export default function App() {
               className="space-y-12"
             >
             
-            {/* HERO MOTOCICLETAS TRECK CAROUSEL HIGHLIGHT */}
-            <div className="relative rounded-3xl overflow-hidden min-h-[460px] md:min-h-[520px] flex items-center bg-gradient-to-r from-zinc-950 via-zinc-900 to-black border border-zinc-805 border-zinc-800 p-6 md:p-12 relative">
-              <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#dc2626_1px,#000_1px)] bg-[size:16px_16px]" />
-              
-              {/* Decorative sport motorbike image */}
-              <div className="absolute right-0 bottom-0 top-0 w-[55%] hidden lg:block z-0">
-                <div 
-                  className="w-full h-full bg-cover bg-center scale-105" 
-                  style={{ 
-                    backgroundImage: `url('https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=1000&auto=format&fit=crop&q=80')`,
-                    clipPath: 'polygon(18% 0%, 100% 0%, 100% 100%, 0% 100%)'
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/40 to-transparent" />
-              </div>
+              {/* HERO MOTOCICLETAS TRECK CAROUSEL HIGHLIGHT */}
+              <div className="relative rounded-3xl overflow-hidden min-h-[460px] md:min-h-[520px] flex items-center bg-gradient-to-r from-zinc-950 via-zinc-900 to-black border border-zinc-805 border-zinc-800 p-6 md:p-12 relative">
+                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#dc2626_1px,#000_1px)] bg-[size:16px_16px]" />
+                
+                {/* Shop/Showroom image (visible on all screen sizes) */}
+                <div className="absolute inset-0 z-0">
+                  <div 
+                    className="w-full h-full bg-cover bg-center" 
+                    style={{ 
+                      backgroundImage: `url('${settings?.shopImage || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=1000&auto=format&fit=crop&q=80'}')`,
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/80 to-zinc-950/60" />
+                </div>
 
               <div className="max-w-xl space-y-6 relative z-10 text-left">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600/10 text-red-500 text-[10px] font-mono font-bold uppercase tracking-widest border border-red-500/20">
@@ -440,6 +452,52 @@ export default function App() {
                 </div>
               </div>
             </div>
+
+            {/* SUCRUSALES Y ALMACENES */}
+            {branches.length > 0 && (
+              <div className="space-y-6">
+                <div className="text-left">
+                  <h2 className="font-sans font-black text-xs sm:text-sm text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <Store className="text-red-500" size={14} />
+                    Nuestras Sucursales y Puntos de Recogida
+                  </h2>
+                  <p className="font-sans text-[10px] text-zinc-400 mt-1">
+                    Visita cualquiera de nuestras ubicaciones físicas en Cuba para retirar tus pedidos y recibir asesoría.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {branches.filter(b => b.isActive).map(b => (
+                    <div key={b.id} className="bg-zinc-900/40 border border-zinc-800 rounded-2xl overflow-hidden hover:border-zinc-700 transition-all group">
+                      {b.image && (
+                        <div className="aspect-video bg-zinc-950 overflow-hidden">
+                          <img src={b.image} alt={b.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                        </div>
+                      )}
+                      <div className="p-4 space-y-2 text-left">
+                        <h3 className="font-sans font-black text-xs text-white uppercase tracking-wide">{b.name}</h3>
+                        <p className="font-sans text-[11px] text-zinc-400 flex items-start gap-1.5">
+                          <MapPin size={12} className="text-red-500 shrink-0 mt-0.5" />
+                          <span>{b.address}</span>
+                        </p>
+                        {b.phone && (
+                          <a href={`tel:${b.phone}`} className="font-sans text-[11px] text-red-400 hover:text-red-300 flex items-center gap-1.5 font-medium">
+                            <Phone size={12} />
+                            {b.phone}
+                          </a>
+                        )}
+                        {b.schedule && (
+                          <p className="font-sans text-[10px] text-zinc-500 flex items-center gap-1.5">
+                            <Clock size={11} />
+                            {b.schedule}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* LOS MÁS VALORADOS - PRODUCT HIGHLIGHTS */}
             <div className="space-y-6">

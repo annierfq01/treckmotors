@@ -70,6 +70,19 @@ export interface PaymentMethodConfig {
   sandboxMode?: boolean;
 }
 
+export interface Branch {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+  schedule: string;
+  image: string;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface SystemSettings {
   paymentsEnabled: boolean;
   paymentMethods: PaymentMethodConfig[];
@@ -84,6 +97,7 @@ export interface SystemSettings {
   facebookPageId?: string;
   facebookPageAccessToken?: string;
   facebookPageName?: string;
+  shopImage?: string;
 }
 
 export interface DatabaseState {

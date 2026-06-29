@@ -26,7 +26,7 @@ treckmotors/
 │   │   ├── supabase.ts       # Clientes Supabase (anon + admin)
 │   │   ├── middleware/
 │   │   │   └── auth.ts       # Middleware JWT + roles
-│   │   ├── routes/           # products, orders, auth, users, reviews, settings, storage, facebook
+│   │   ├── routes/           # products, orders, auth, users, reviews, settings, storage, facebook, branches
 │   │   ├── data/
 │   │   │   └── initialDb.ts  # Seed data (productos, usuarios, pedidos)
 │   │   └── services/
@@ -39,6 +39,7 @@ treckmotors/
 │   └── storage.sql           # Buckets y políticas de Storage
 ├── package.json               # Orquestador raíz
 ├── vercel.json                # Routing de Vercel (todo → serverless Express)
+├── modificar_en_supabase.txt  # Migración para BD existentes
 └── README.md
 ```
 
@@ -66,7 +67,13 @@ En el **SQL Editor** de Supabase, abre y ejecuta:
 supabase/schema.sql
 ```
 
-Esto crea: `products`, `orders`, `users`, `reviews`, `settings` con índices, RLS y triggers.
+Esto crea las tablas: `products`, `orders`, `users`, `reviews`, `settings`, `branches` con índices, RLS y triggers.
+
+**Si ya tienes la base de datos creada** (versión anterior sin `branches` ni `shop_image`), ejecuta en su lugar:
+
+```
+modificar_en_supabase.txt
+```
 
 ### 1.3 Configurar Storage
 
@@ -318,29 +325,115 @@ Como URL de redirect.
 | POST | /api/reviews | Crear reseña | Requiere auth |
 | GET | /api/settings | Obtener configuración | Pública |
 | PUT | /api/settings | Actualizar configuración | Requiere auth + admin |
-| POST | /api/storage/upload | Subir archivo | Requiere auth + admin |
+| POST | /api/storage/upload | Subir archivo (comprimido a <2MB) | Requiere auth + admin |
 | DELETE | /api/storage/delete | Eliminar archivo | Requiere auth + admin |
 | GET | /api/facebook/auth-url | Obtener URL de auth Facebook | Requiere auth + admin |
 | POST | /api/facebook/callback | Procesar callback Facebook | Requiere auth + admin |
 | GET | /api/facebook/status | Estado de conexión Facebook | Requiere auth |
 | POST | /api/facebook/post | Publicar producto en Facebook | Requiere auth + admin |
+| GET | /api/branches | Listar sucursales activas | Pública |
+| POST | /api/branches | Crear sucursal | Requiere auth + admin |
+| PUT | /api/branches/:id | Actualizar sucursal | Requiere auth + admin |
+| DELETE | /api/branches/:id | Eliminar sucursal | Requiere auth + admin |
 
 > **Autenticación:** El sistema usa autenticación propia con JWT firmado con `jsonwebtoken`. El token se envía en el header `Authorization: Bearer <token>`. El servidor valida el token con `jwt.verify()` y verifica el rol del usuario antes de procesar la solicitud. Las contraseñas se almacenan hasheadas con PBKDF2-SHA256 + salt de 32 bytes.
 
 ---
 
-## 8. Integración con Facebook (Publicación Automática)
+## 8. Base de datos
+
+### 8.1 Tablas
+
+| Tabla | Descripción |
+|---|---|
+| `products` | Catálogo de motos, piezas y otros productos |
+| `orders` | Pedidos de clientes con items, total y estado |
+| `users` | Perfiles de usuario con rol y estado activo/bloqueado |
+| `reviews` | Reseñas y valoraciones de productos |
+| `settings` | Configuración de la tienda (singleton row `id='system'`) |
+| `branches` | Sucursales y almacenes físicos |
+
+### 8.2 Configuración de la tienda (`settings`)
+
+Campos disponibles en la tabla `public.settings`:
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `payments_enabled` | BOOLEAN | Activar/desactivar pasarela de pago online |
+| `payment_methods` | JSONB | Métodos de pago (tarjeta, transferencia, efectivo) |
+| `contact_phone` | TEXT | Teléfono de contacto principal |
+| `contact_email` | TEXT | Correo electrónico de la tienda |
+| `shop_address` | TEXT | Dirección física del showroom |
+| `shop_hours` | TEXT | Horario comercial |
+| `reservations_enabled` | BOOLEAN | Activar/desactivar reservas |
+| `facebook_url` | TEXT | Enlace a página de Facebook |
+| `instagram_url` | TEXT | Enlace a Instagram |
+| `whatsapp_number` | TEXT | Número de WhatsApp |
+| `facebook_page_id` | TEXT | ID de página de Facebook conectada |
+| `facebook_page_access_token` | TEXT | Token de acceso de Facebook |
+| `facebook_page_name` | TEXT | Nombre de la página de Facebook |
+| `shop_image` | TEXT | URL de imagen del local/showroom |
+
+### 8.3 Sucursales (`branches`)
+
+| Columna | Tipo | Descripción |
+|---|---|---|
+| `id` | TEXT PK | Identificador único |
+| `name` | TEXT NOT NULL | Nombre de la sucursal |
+| `address` | TEXT | Dirección física |
+| `phone` | TEXT | Teléfono de contacto |
+| `email` | TEXT | Correo electrónico |
+| `schedule` | TEXT | Horario de atención |
+| `image` | TEXT | URL de imagen del local |
+| `is_active` | BOOLEAN | Si está activa (default true) |
+
+---
+
+## 9. Funcionalidades del frontend
+
+### Panel de administración
+
+- **Estadísticas:** Dashboard con ingresos totales, pendientes, pedidos y productos
+- **Catálogo:** CRUD de productos con subida de imágenes (compresión automática <2MB vía sharp)
+- **Pedidos:** Monitor con cambios de estado en tiempo real (SSE)
+- **Usuarios:** Gestión de roles y bloqueo de cuentas
+- **Configuración Tienda:**
+  - Datos de contacto y ubicación
+  - Imagen de la tienda (se muestra en el Hero de la página principal)
+  - Métodos de pago (tarjeta, transferencia bancaria, PayPal, efectivo)
+  - Integración con Facebook para publicación automática
+  - **Sucursales y Almacenes:** CRUD completo con modal de edición
+  - Todos los cambios se guardan con un botón **"Guardar Cambios"** (no en tiempo real)
+
+### Página principal (Home)
+
+- Hero con imagen de la tienda (visible en todos los tamaños de pantalla)
+- Catálogo de productos con filtros por tipo (motos, piezas, otros)
+- Tarjetas de sucursales activas con imagen, dirección, teléfono y horario
+- Sección de productos más valorados
+- Modal de reservas y carrito de compras
+
+### Compresión de imágenes
+
+Al subir imágenes a Supabase Storage, el servidor usa **sharp** para:
+- Reducir calidad JPEG progresivamente hasta < 2 MB
+- Redimensionar la imagen si es necesario
+- Entregar siempre una imagen JPEG optimizada con `mozjpeg`
+
+---
+
+## 10. Integración con Facebook (Publicación Automática)
 
 El sistema permite publicar productos directamente en una página de Facebook desde el panel de administración.
 
-### 8.1 Configurar App de Facebook
+### 10.1 Configurar App de Facebook
 
 1. Ve a [https://developers.facebook.com](https://developers.facebook.com) y crea una nueva App
 2. Agrega los productos **Facebook Login** y **Pages API**
 3. Configura la URI de redirección de OAuth con la URL de tu panel de admin (ej: `http://localhost:3000/admin`)
 4. Copia el **App ID** y **App Secret** al archivo `server/.env`
 
-### 8.2 Conectar página desde el Admin
+### 10.2 Conectar página desde el Admin
 
 1. Inicia sesión como administrador
 2. Ve al panel de administración > **Configuración Tienda**
@@ -348,7 +441,7 @@ El sistema permite publicar productos directamente en una página de Facebook de
 4. Haz clic en **"Conectar Página de Facebook"** para autorizar la app
 5. Ingresa el código de autorización que recibas
 
-### 8.3 Publicar un producto
+### 10.3 Publicar un producto
 
 - **Desde el catálogo:** Abre los detalles de cualquier producto y haz clic en **"Publicar en FB"** (visible solo para administradores)
 - **Desde el panel admin:** En la pestaña **"Catálogo de Inventario"**, cada producto tiene un botón de publicación rápida

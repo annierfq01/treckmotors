@@ -1,8 +1,36 @@
 import { Router } from 'express';
+import sharp from 'sharp';
 import { supabaseAdmin } from '../supabase.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 
 const router = Router();
+
+async function compressImage(buffer: Buffer, maxBytes: number = 2 * 1024 * 1024): Promise<Buffer> {
+  let quality = 85;
+  let compressed = await sharp(buffer)
+    .jpeg({ quality, mozjpeg: true })
+    .toBuffer();
+
+  while (compressed.length > maxBytes && quality > 10) {
+    quality -= 5;
+    compressed = await sharp(buffer)
+      .jpeg({ quality, mozjpeg: true })
+      .toBuffer();
+  }
+
+  if (compressed.length > maxBytes) {
+    const scaleFactor = Math.sqrt(maxBytes / compressed.length) * 0.9;
+    const metadata = await sharp(buffer).metadata();
+    const newWidth = Math.round((metadata.width || 1920) * scaleFactor);
+    const newHeight = Math.round((metadata.height || 1080) * scaleFactor);
+    compressed = await sharp(buffer)
+      .resize(newWidth, newHeight, { fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 80, mozjpeg: true })
+      .toBuffer();
+  }
+
+  return compressed;
+}
 
 router.post('/upload', requireAuth, requireAdmin, async (req, res) => {
   try {
@@ -12,12 +40,16 @@ router.post('/upload', requireAuth, requireAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields: bucket, fileName, fileBase64' });
     }
 
-    const buffer = Buffer.from(fileBase64, 'base64');
+    let buffer = Buffer.from(fileBase64, 'base64');
+
+    if (contentType && contentType.startsWith('image/')) {
+      buffer = await compressImage(buffer);
+    }
 
     const { data, error } = await supabaseAdmin.storage
       .from(bucket)
       .upload(fileName, buffer, {
-        contentType: contentType || 'image/jpeg',
+        contentType: 'image/jpeg',
         upsert: true,
       });
 

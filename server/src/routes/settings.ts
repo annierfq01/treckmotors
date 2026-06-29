@@ -23,6 +23,7 @@ router.get('/', async (_req, res) => {
           facebookPageId: '',
           facebookPageAccessToken: '',
           facebookPageName: '',
+          shopImage: '',
         });
       }
       throw error;
@@ -41,6 +42,7 @@ router.get('/', async (_req, res) => {
       facebookPageId: data.facebook_page_id || '',
       facebookPageAccessToken: data.facebook_page_access_token || '',
       facebookPageName: data.facebook_page_name || '',
+      shopImage: data.shop_image || '',
     });
   } catch (err) {
     console.error('[Settings] Error fetching:', err);
@@ -66,6 +68,7 @@ router.put('/', requireAuth, requireAdmin, async (req, res) => {
       facebook_page_id: s.facebookPageId || '',
       facebook_page_access_token: s.facebookPageAccessToken || '',
       facebook_page_name: s.facebookPageName || '',
+      shop_image: s.shopImage || '',
     }).select().single();
 
     if (error) throw error;
@@ -83,6 +86,7 @@ router.put('/', requireAuth, requireAdmin, async (req, res) => {
       facebookPageId: data.facebook_page_id || '',
       facebookPageAccessToken: data.facebook_page_access_token || '',
       facebookPageName: data.facebook_page_name || '',
+      shopImage: data.shop_image || '',
     });
   } catch (err) {
     console.error('[Settings] Error updating:', err);
