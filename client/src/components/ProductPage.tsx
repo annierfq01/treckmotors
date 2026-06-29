@@ -57,7 +57,7 @@ export default function ProductPage({ product, reviews, settings, currentUser, o
 
   const ratingInfo = getProductRatingInfo(product.id, reviews);
   const productUrl = `${window.location.origin}/producto/${product.id}`;
-  const description = `${product.description} | Precio: $${product.price.toLocaleString()} MLC / USD. ¡Garantía de rendimiento original!`;
+  const description = `${product.description} | Precio: $${product.price.toLocaleString()} ${product.currency || 'USD'}. ¡Garantía de rendimiento original!`;
 
   const nextProducts = allProducts
     .filter(p => p.id !== product.id && (p.type === product.type || p.category === product.category))
@@ -155,7 +155,7 @@ export default function ProductPage({ product, reviews, settings, currentUser, o
                 <div className="flex flex-col">
                   <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Monto Reserva Física</span>
                   <span className="font-sans font-black text-red-500 text-lg font-mono">
-                    ${product.price.toLocaleString()} MLC / USD
+                    ${product.price.toLocaleString()} {product.currency || 'USD'}
                   </span>
                 </div>
 
@@ -312,7 +312,7 @@ export default function ProductPage({ product, reviews, settings, currentUser, o
                   <div className="p-3 space-y-1">
                     <span className="text-[8px] font-bold text-red-500 uppercase tracking-widest block">{rel.category}</span>
                     <h4 className="font-sans font-bold text-xs text-zinc-200 truncate">{rel.name}</h4>
-                    <span className="font-mono font-black text-red-500 text-xs block">${rel.price.toLocaleString()}</span>
+                    <span className="font-mono font-black text-red-500 text-xs block">${rel.price.toLocaleString()} {rel.currency || 'USD'}</span>
                   </div>
                 </a>
               ))}

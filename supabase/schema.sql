@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS public.products (
   type TEXT NOT NULL DEFAULT 'pieza' CHECK (type IN ('moto', 'pieza')),
   name TEXT NOT NULL,
   price NUMERIC NOT NULL DEFAULT 0,
+  currency TEXT DEFAULT 'USD' CHECK (currency IN ('USD', 'MLC', 'CUP', 'EUR')),
   image TEXT DEFAULT '',
   description TEXT DEFAULT '',
   category TEXT DEFAULT '',

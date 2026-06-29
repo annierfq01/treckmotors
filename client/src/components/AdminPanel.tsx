@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Product, Order, User, SystemSettings, OrderStatus, ProductType, Branch } from '../types';
+import { Product, Order, User, SystemSettings, OrderStatus, ProductType, Currency, Branch } from '../types';
 import { 
   BarChart3, Plus, Edit2, Trash2, Shield, UserX, UserCheck, Settings, 
   TrendingUp, CreditCard, ShoppingBag, Users, Layers, AlertCircle, 
@@ -43,6 +43,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
     name: '',
     type: 'pieza' as ProductType,
     price: 0,
+    currency: 'USD' as Currency,
     image: '',
     description: '',
     category: '',
@@ -241,6 +242,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
         name: product.name,
         type: product.type,
         price: product.price,
+        currency: product.currency || 'USD',
         image: product.image,
         description: product.description,
         category: product.category,
@@ -254,6 +256,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
         name: '',
         type: 'pieza',
         price: 0,
+        currency: 'USD',
         image: '',
         description: '',
         category: '',
@@ -340,6 +343,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
       name: productForm.name,
       type: productForm.type,
       price: Number(productForm.price),
+      currency: productForm.currency,
       image: imageUrl,
       description: productForm.description,
       category: productForm.category,
@@ -617,7 +621,7 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                         <div className="text-[10px] text-neutral-500 mt-1">{p.category}</div>
                       </td>
                       <td className="px-4 py-3 font-mono font-bold text-white">
-                        ${p.price.toLocaleString()}
+                        ${p.price.toLocaleString()} {p.currency || 'USD'}
                       </td>
                       <td className="px-4 py-3">
                         <span className={`font-mono font-bold px-2 py-0.5 rounded ${
@@ -1399,9 +1403,9 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-[11px] font-bold text-neutral-400 mb-1">PRECIO EN USD ($) *</label>
+                  <label className="block text-[11px] font-bold text-neutral-400 mb-1">PRECIO *</label>
                   <input
                     type="number"
                     required
@@ -1409,6 +1413,19 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                     onChange={(e) => setProductForm({ ...productForm, price: Number(e.target.value) })}
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2 font-mono text-xs text-white focus:outline-none focus:border-red-500 transition-colors"
                   />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-neutral-400 mb-1">MONEDA</label>
+                  <select
+                    value={productForm.currency}
+                    onChange={(e) => setProductForm({ ...productForm, currency: e.target.value as Currency })}
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2 font-mono text-xs text-white focus:outline-none focus:border-red-500 transition-colors cursor-pointer"
+                  >
+                    <option value="USD">USD ($)</option>
+                    <option value="MLC">MLC</option>
+                    <option value="CUP">CUP ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-neutral-400 mb-1">DISTR. CATEGORÍA *</label>

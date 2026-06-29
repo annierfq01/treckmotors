@@ -124,7 +124,7 @@ export default function ReservationModal({
                     <span className="text-[10px] text-zinc-400 font-mono block mt-0.5">Categoría: {product.category}</span>
                     <div className="flex items-center justify-between text-xs text-neutral-300 mt-1 font-bold">
                       <span>Precio:</span>
-                      <span className="text-red-500 font-mono">${product.price.toLocaleString()} MLC / USD</span>
+                      <span className="text-red-500 font-mono">${product.price.toLocaleString()} {product.currency || 'USD'}</span>
                     </div>
                   </div>
                 </div>
@@ -154,7 +154,7 @@ export default function ReservationModal({
                 <div className="flex items-end justify-between">
                   <span className="text-xs text-neutral-300 font-medium">Monto a abonar en tienda</span>
                   <span className="text-xl font-black font-sans text-red-500 font-mono">
-                    ${product.price.toLocaleString()}
+                    ${product.price.toLocaleString()} {product.currency || 'USD'}
                   </span>
                 </div>
               </div>

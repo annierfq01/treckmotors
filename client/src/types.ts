@@ -1,10 +1,13 @@
 export type ProductType = 'moto' | 'pieza' | 'otros';
 
+export type Currency = 'USD' | 'MLC' | 'CUP' | 'EUR';
+
 export interface Product {
   id: string;
   type: ProductType;
   name: string;
   price: number;
+  currency: Currency;
   image: string;
   description: string;
   category: string;

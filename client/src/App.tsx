@@ -548,7 +548,7 @@ export default function App() {
                             <span className="text-zinc-500">({r.count} reseñas)</span>
                           </div>
                           <span className="absolute top-2.5 right-2.5 bg-red-600 text-white font-mono font-bold text-[8px] px-2 py-0.5 rounded uppercase">
-                            MLC / USD
+                            {p.currency || 'USD'}
                           </span>
                           <button
                             onClick={(e) => {
@@ -577,7 +577,7 @@ export default function App() {
                           <div className="flex items-center justify-between pt-3 border-t border-zinc-850">
                             <div className="flex flex-col">
                               <span className="text-[8px] text-zinc-500 font-bold uppercase">PRECIO</span>
-                              <span className="font-sans font-black text-red-500 font-mono text-sm">${p.price.toLocaleString()}</span>
+                              <span className="font-sans font-black text-red-500 font-mono text-sm">${p.price.toLocaleString()} {p.currency || 'USD'}</span>
                             </div>
                             
                             <button
@@ -957,7 +957,7 @@ export default function App() {
                           <div className="flex items-center justify-between pt-3 border-t border-zinc-800/80">
                             <div className="flex flex-col">
                               <span className="text-[8px] text-zinc-500 font-bold uppercase tracking-wide">PRECIO</span>
-                              <span className="font-sans font-black text-white text-base leading-tight">${p.price.toLocaleString()}</span>
+                              <span className="font-sans font-black text-white text-base leading-tight">${p.price.toLocaleString()} {p.currency || 'USD'}</span>
                             </div>
 
                             <button

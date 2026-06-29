@@ -176,7 +176,7 @@ export default function SocialPreviewMockup({ product, onClose }: SocialPreviewM
                           referrerPolicy="no-referrer"
                         />
                         <div className="absolute top-2 right-2 bg-red-600 text-white font-mono font-bold text-[9px] px-2 py-0.5 rounded shadow">
-                          ${product.price.toLocaleString()} MLC
+                          ${product.price.toLocaleString()} {product.currency || 'USD'}
                         </div>
                       </div>
                       
