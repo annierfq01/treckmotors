@@ -637,15 +637,15 @@ export default function App() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {branches.filter(b => b.isActive).map(b => (
-                    <div key={b.id} className="bg-zinc-900/40 border border-zinc-800 rounded-2xl overflow-hidden hover:border-zinc-700 transition-all group">
+                    <div key={b.id} className="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden flex flex-col justify-between group hover:border-red-600/30 transition-all duration-300 transform hover:-translate-y-1">
                       {b.image && (
-                        <div className="aspect-video bg-zinc-950 overflow-hidden">
+                        <div className="relative overflow-hidden aspect-video bg-zinc-950">
                           <img src={b.image} alt={b.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                         </div>
                       )}
-                      <div className="p-4 space-y-2 text-left">
+                      <div className="p-4 space-y-3 text-left flex-1 flex flex-col justify-between">
                         <h3 className="font-sans font-black text-xs text-white uppercase tracking-wide">{b.name}</h3>
                         <p className="font-sans text-[11px] text-zinc-400 flex items-start gap-1.5">
                           <MapPin size={12} className="text-red-500 shrink-0 mt-0.5" />
