@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { supabaseAdmin } from '../supabase.js';
+import { supabaseAdmin, deleteStorageImage } from '../supabase.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 
 const router = Router();
@@ -53,6 +53,9 @@ router.get('/', async (_req, res) => {
 router.put('/', requireAuth, requireAdmin, async (req, res) => {
   try {
     const s = req.body;
+
+    const { data: old } = await supabaseAdmin.from('settings').select('shop_image').eq('id', 'system').single();
+
     const { data, error } = await supabaseAdmin.from('settings').upsert({
       id: 'system',
       payments_enabled: s.paymentsEnabled ?? true,
@@ -72,6 +75,11 @@ router.put('/', requireAuth, requireAdmin, async (req, res) => {
     }).select().single();
 
     if (error) throw error;
+
+    if (old && old.shop_image && old.shop_image !== data.shop_image) {
+      await deleteStorageImage(old.shop_image);
+    }
+
     res.json({
       paymentsEnabled: data.payments_enabled,
       paymentMethods: data.payment_methods,

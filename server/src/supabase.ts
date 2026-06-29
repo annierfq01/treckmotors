@@ -18,3 +18,22 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
   realtime: realtimeOpts,
 });
+
+const STORAGE_URL_PREFIX = `${supabaseUrl}/storage/v1/object/public/`;
+
+export async function deleteStorageImage(imageUrl: string): Promise<void> {
+  if (!imageUrl || !imageUrl.startsWith(STORAGE_URL_PREFIX)) return;
+
+  const pathAfterPublic = imageUrl.slice(STORAGE_URL_PREFIX.length);
+  const slashIdx = pathAfterPublic.indexOf('/');
+  if (slashIdx === -1) return;
+
+  const bucket = pathAfterPublic.slice(0, slashIdx);
+  const filePath = pathAfterPublic.slice(slashIdx + 1);
+  if (!bucket || !filePath) return;
+
+  const { error } = await supabaseAdmin.storage.from(bucket).remove([filePath]);
+  if (error) {
+    console.error(`[Storage] Error deleting ${bucket}/${filePath}:`, error.message);
+  }
+}

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { supabaseAdmin } from '../supabase.js';
+import { supabaseAdmin, deleteStorageImage } from '../supabase.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 
 const router = Router();
@@ -60,6 +60,8 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
 router.put('/:id', requireAuth, requireAdmin, async (req, res) => {
   try {
     const b = req.body;
+    const { data: old } = await supabaseAdmin.from('branches').select('image').eq('id', req.params.id).single();
+
     const { data, error } = await supabaseAdmin.from('branches').update({
       name: b.name,
       address: b.address || '',
@@ -71,6 +73,11 @@ router.put('/:id', requireAuth, requireAdmin, async (req, res) => {
     }).eq('id', req.params.id).select().single();
 
     if (error) throw error;
+
+    if (old && old.image && old.image !== data.image) {
+      await deleteStorageImage(old.image);
+    }
+
     res.json({
       id: data.id,
       name: data.name,
@@ -89,8 +96,15 @@ router.put('/:id', requireAuth, requireAdmin, async (req, res) => {
 
 router.delete('/:id', requireAuth, requireAdmin, async (req, res) => {
   try {
+    const { data: old } = await supabaseAdmin.from('branches').select('image').eq('id', req.params.id).single();
+
     const { error } = await supabaseAdmin.from('branches').delete().eq('id', req.params.id);
     if (error) throw error;
+
+    if (old && old.image) {
+      await deleteStorageImage(old.image);
+    }
+
     res.json({ success: true });
   } catch (err) {
     console.error('[Branches] Error deleting:', err);
