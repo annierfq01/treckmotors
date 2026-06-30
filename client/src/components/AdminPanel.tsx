@@ -315,12 +315,13 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
         const { compressImage } = await import('../utils/imageCompress');
         const ext = file.name.split('.').pop() || 'jpg';
         const fileName = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const base64 = await compressImage(file);
-        const result = await uploadImage('products', fileName, base64, 'image/jpeg');
-        imageUrl = result.url;
+        const result = await compressImage(file);
+        const r = await uploadImage('products', fileName, result.base64, 'image/jpeg');
+        imageUrl = r.url;
       } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Error desconocido';
         console.error('[Upload] Error:', err);
-        alert('Error al subir la imagen. Intenta de nuevo.');
+        alert(`Error al subir la imagen:\n${msg}`);
         setIsUploadingImage(false);
         return;
       }
@@ -988,18 +989,19 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
-                        const { uploadImage } = await import('../services/storage');
-                        const { compressImage } = await import('../utils/imageCompress');
-                        const ext = file.name.split('.').pop() || 'jpg';
-                        const fileName = `shop/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-                        const base64 = await compressImage(file);
                         try {
-                          const result = await uploadImage('products', fileName, base64, 'image/jpeg');
-                          setDraftSettings({ ...draftSettings, shopImage: result.url });
+                          const { uploadImage } = await import('../services/storage');
+                          const { compressImage } = await import('../utils/imageCompress');
+                          const ext = file.name.split('.').pop() || 'jpg';
+                          const fileName = `shop/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+                          const result = await compressImage(file);
+                          const r = await uploadImage('products', fileName, result.base64, 'image/jpeg');
+                          setDraftSettings({ ...draftSettings, shopImage: r.url });
                           playSuccessBeep();
                         } catch (err) {
+                          const msg = err instanceof Error ? err.message : 'Error desconocido';
                           console.error(err);
-                          alert('Error al subir la imagen.');
+                          alert(`Error al subir la imagen:\n${msg}`);
                         }
                       }}
                     />
@@ -1665,18 +1667,19 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
-                        const { uploadImage } = await import('../services/storage');
-                        const { compressImage } = await import('../utils/imageCompress');
-                        const ext = file.name.split('.').pop() || 'jpg';
-                        const fileName = `branches/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-                        const base64 = await compressImage(file);
                         try {
-                          const result = await uploadImage('products', fileName, base64, 'image/jpeg');
-                          setBranchForm({ ...branchForm, image: result.url });
+                          const { uploadImage } = await import('../services/storage');
+                          const { compressImage } = await import('../utils/imageCompress');
+                          const ext = file.name.split('.').pop() || 'jpg';
+                          const fileName = `branches/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+                          const result = await compressImage(file);
+                          const r = await uploadImage('products', fileName, result.base64, 'image/jpeg');
+                          setBranchForm({ ...branchForm, image: r.url });
                           playSuccessBeep();
                         } catch (err) {
+                          const msg = err instanceof Error ? err.message : 'Error desconocido';
                           console.error(err);
-                          alert('Error al subir la imagen.');
+                          alert(`Error al subir la imagen:\n${msg}`);
                         }
                       }}
                     />
