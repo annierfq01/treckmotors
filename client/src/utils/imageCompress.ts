@@ -1,5 +1,5 @@
-const MAX_DIMENSION = 1920;
-const JPEG_QUALITY = 0.7;
+const MAX_DIMENSION = 720;
+const JPEG_QUALITY = 0.8;
 
 export function compressImage(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
