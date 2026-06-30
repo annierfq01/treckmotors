@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { playSuccessBeep } from './utils/audio';
+declare const __BUILD_TIME__: number;
+const BUILD_VERSION = __BUILD_TIME__.toString(36);
 import * as authService from './services/auth';
 import * as productsService from './services/products';
 import * as ordersService from './services/orders';
@@ -28,6 +30,7 @@ export default function App() {
   const [customerOrders, setCustomerOrders] = useState<Order[]>([]);
   const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
+  const [showUpdateBanner, setShowUpdateBanner] = useState(false);
   
   const [currentUser, setCurrentUser] = useState<{ 
     email: string; 
@@ -55,6 +58,14 @@ export default function App() {
 
   const [currentView, setCurrentView] = useState<'home' | 'catalog' | 'admin' | 'my-orders'>('home');
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('app_version');
+    if (stored && stored !== BUILD_VERSION) {
+      setShowUpdateBanner(true);
+    }
+    localStorage.setItem('app_version', BUILD_VERSION);
+  }, []);
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -295,6 +306,27 @@ export default function App() {
     <HelmetProvider>
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans selection:bg-red-650 selection:bg-red-600">
       
+      {showUpdateBanner && (
+        <div className="fixed top-0 left-0 right-0 z-[9999] bg-red-600 text-white text-center text-xs py-2 px-4 font-sans font-bold flex items-center justify-center gap-3">
+          <span>Nueva versión disponible</span>
+          <button
+            onClick={() => {
+              localStorage.setItem('app_version', BUILD_VERSION);
+              window.location.reload();
+            }}
+            className="bg-white text-red-600 px-3 py-1 rounded-lg font-bold hover:bg-red-50 transition-colors"
+          >
+            Actualizar
+          </button>
+          <button
+            onClick={() => setShowUpdateBanner(false)}
+            className="text-white/70 hover:text-white transition-colors"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {productPageProduct ? (
         <ProductPage
           product={productPageProduct}

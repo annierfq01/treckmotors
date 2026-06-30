@@ -4,6 +4,9 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
+    define: {
+      __BUILD_TIME__: Date.now(),
+    },
     plugins: [react()],
     base: '/',
     build: {
