@@ -312,18 +312,11 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
       setIsUploadingImage(true);
       try {
         const { uploadImage } = await import('../services/storage');
+        const { compressImage } = await import('../utils/imageCompress');
         const ext = file.name.split('.').pop() || 'jpg';
         const fileName = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const reader = new FileReader();
-        const base64 = await new Promise<string>((resolve, reject) => {
-          reader.onload = () => {
-            const result = reader.result as string;
-            resolve(result.split(',')[1]);
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-        const result = await uploadImage('products', fileName, base64, file.type);
+        const base64 = await compressImage(file);
+        const result = await uploadImage('products', fileName, base64, 'image/jpeg');
         imageUrl = result.url;
       } catch (err) {
         console.error('[Upload] Error:', err);
@@ -996,15 +989,12 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                         const file = e.target.files?.[0];
                         if (!file) return;
                         const { uploadImage } = await import('../services/storage');
+                        const { compressImage } = await import('../utils/imageCompress');
                         const ext = file.name.split('.').pop() || 'jpg';
                         const fileName = `shop/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-                        const reader = new FileReader();
-                        const base64 = await new Promise<string>((resolve) => {
-                          reader.onload = () => resolve((reader.result as string).split(',')[1]);
-                          reader.readAsDataURL(file);
-                        });
+                        const base64 = await compressImage(file);
                         try {
-                          const result = await uploadImage('products', fileName, base64, file.type);
+                          const result = await uploadImage('products', fileName, base64, 'image/jpeg');
                           setDraftSettings({ ...draftSettings, shopImage: result.url });
                           playSuccessBeep();
                         } catch (err) {
@@ -1676,15 +1666,12 @@ export default function AdminPanel({ currentAdminEmail }: AdminPanelProps) {
                         const file = e.target.files?.[0];
                         if (!file) return;
                         const { uploadImage } = await import('../services/storage');
+                        const { compressImage } = await import('../utils/imageCompress');
                         const ext = file.name.split('.').pop() || 'jpg';
                         const fileName = `branches/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-                        const reader = new FileReader();
-                        const base64 = await new Promise<string>((resolve) => {
-                          reader.onload = () => resolve((reader.result as string).split(',')[1]);
-                          reader.readAsDataURL(file);
-                        });
+                        const base64 = await compressImage(file);
                         try {
-                          const result = await uploadImage('products', fileName, base64, file.type);
+                          const result = await uploadImage('products', fileName, base64, 'image/jpeg');
                           setBranchForm({ ...branchForm, image: result.url });
                           playSuccessBeep();
                         } catch (err) {

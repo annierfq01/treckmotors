@@ -42,7 +42,7 @@ router.post('/upload', requireAuth, requireAdmin, async (req, res) => {
 
     let buffer = Buffer.from(fileBase64, 'base64');
 
-    if (contentType && contentType.startsWith('image/')) {
+    if (contentType && contentType.startsWith('image/') && buffer.length > 2 * 1024 * 1024) {
       buffer = await compressImage(buffer);
     }
 
