@@ -22,6 +22,7 @@ export async function uploadImage(
     return await apiRequest<UploadResponse>('/storage/upload', {
       method: 'POST',
       body: { bucket, fileName, contentType, fileBase64 },
+      timeout: 60000,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Error desconocido';

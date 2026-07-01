@@ -1,9 +1,11 @@
 const API_BASE = '/api';
+const DEFAULT_TIMEOUT = 30000;
 
 interface ApiOptions {
   method?: string;
   body?: any;
   headers?: Record<string, string>;
+  timeout?: number;
 }
 
 function getAuthToken(): string | null {
@@ -29,7 +31,7 @@ function getUserEmail(): string | null {
 }
 
 export async function apiRequest<T = any>(endpoint: string, options: ApiOptions = {}): Promise<T> {
-  const { method = 'GET', body, headers = {} } = options;
+  const { method = 'GET', body, headers = {}, timeout = DEFAULT_TIMEOUT } = options;
 
   const authHeaders: Record<string, string> = {};
 
@@ -43,6 +45,9 @@ export async function apiRequest<T = any>(endpoint: string, options: ApiOptions 
     }
   }
 
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+
   const config: RequestInit = {
     method,
     headers: {
@@ -50,18 +55,37 @@ export async function apiRequest<T = any>(endpoint: string, options: ApiOptions 
       ...authHeaders,
       ...headers,
     },
+    signal: controller.signal,
   };
 
   if (body && method !== 'GET') {
     config.body = JSON.stringify(body);
   }
 
-  const res = await fetch(`${API_BASE}${endpoint}`, config);
+  try {
+    const res = await fetch(`${API_BASE}${endpoint}`, config);
 
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(errorData.error || `HTTP ${res.status}`);
+    if (!res.ok) {
+      let msg = `HTTP ${res.status}`;
+      try {
+        const errData = await res.json();
+        if (errData.error) msg = errData.error;
+        if (errData.detail) msg += ` (${errData.detail})`;
+        if (errData.step) msg += ` [${errData.step}]`;
+      } catch {}
+      throw new Error(msg);
+    }
+
+    return res.json();
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new Error('La conexión está tardando demasiado. Revisa tu internet e intenta de nuevo.');
+    }
+    if (err instanceof TypeError && err.message === 'Failed to fetch') {
+      throw new Error('No se pudo conectar con el servidor. Revisa tu conexión a internet.');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
   }
-
-  return res.json();
 }
